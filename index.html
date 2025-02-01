@@ -61,7 +61,8 @@
 </head>
 <body>
   <div class="container">
-    <button id="liftEarnButton">lift and earn</button>
+    <!-- Button text updated to "v1" -->
+    <button id="liftEarnButton">v1</button>
     <div id="message"></div>
   </div>
 
@@ -144,75 +145,5 @@
 
       // Update velocity and displacement using simple integration:
       // v = v + a*dt; displacement = displacement + v*dt;
-      velocity += ay * dt;
-      displacement += velocity * dt;
-
-      // Track the maximum displacement reached (only considering upward movement)
-      if (displacement > maxDisplacement) {
-        maxDisplacement = displacement;
-      }
-
-      // Debug (optional): uncomment to log values
-      // console.log(`ay: ${ay.toFixed(2)} m/s², v: ${velocity.toFixed(2)} m/s, d: ${displacement.toFixed(2)} m`);
-
-      // Check for our dumbbell-lift pattern:
-      // 1. The phone is lifted upward past the threshold.
-      // 2. Then, the phone is lowered back near the starting position.
-      if (maxDisplacement >= displacementThreshold && Math.abs(displacement) < returnThreshold && velocity < 0) {
-        gestureComplete = true;
-        stopMotionListening();
-        triggerTrainingLogged();
-      }
-    }
-
-    // Function to trigger the training logged action (show bubbles and a message)
-    function triggerTrainingLogged() {
-      createBubbles(15);
-      messageDiv.textContent = 'Congrats, your training is logged!';
-    }
-
-    // Function to request sensor access (for iOS 13+)
-    function requestMotionPermission() {
-      if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
-        DeviceMotionEvent.requestPermission()
-          .then(response => {
-            if (response === 'granted') {
-              startMotionListening();
-            } else {
-              messageDiv.textContent = 'Permission not granted for motion sensors.';
-            }
-          })
-          .catch(err => {
-            console.error(err);
-            messageDiv.textContent = 'Error requesting motion sensor permission.';
-          });
-      } else {
-        // No explicit permission needed (e.g. on many Android browsers)
-        startMotionListening();
-      }
-    }
-
-    // Function to start listening to motion events for a limited time
-    function startMotionListening() {
-      resetIntegration();
-      motionListener = handleMotion;
-      window.addEventListener('devicemotion', motionListener);
-
-      // Stop listening after a time limit if no valid gesture is detected
-      setTimeout(() => {
-        stopMotionListening();
-        if (!gestureComplete) {
-          messageDiv.textContent = 'No proper lift detected. Try again!';
-        }
-      }, integrationTimeLimit);
-    }
-
-    // Button click event to start the gesture detection process
-    liftEarnButton.addEventListener('click', () => {
-      messageDiv.textContent = 'Lift your phone like a dumbbell (20cm up and lower)!';
-      requestMotionPermission();
-    });
-  </script>
-</body>
-</html>
+      velocit
 
