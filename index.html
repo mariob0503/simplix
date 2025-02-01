@@ -2,119 +2,175 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <title>Lift and Earn</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Shake Detection App</title>
   <style>
-    body {
+    /* Basic reset and styling */
+    html, body {
       margin: 0;
       padding: 0;
+      height: 100%;
+      background-color: black;
+      color: white;
+      font-family: Arial, sans-serif;
+      overflow: hidden;
+    }
+    .container {
       display: flex;
+      flex-direction: column;
       justify-content: center;
       align-items: center;
-      height: 100vh;
-      background-color: #f0f0f0;
-      font-family: Arial, sans-serif;
-    }
-
-    .container {
+      height: 100%;
       text-align: center;
-      background-color: #fff;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     }
-
-    h1 {
-      font-size: 2rem;
-      margin-bottom: 20px;
-    }
-
-    #message {
+    button {
+      padding: 15px 30px;
       font-size: 1.2rem;
-      color: #333;
-      margin-bottom: 20px;
-    }
-
-    #startButton {
-      padding: 10px 20px;
-      font-size: 1rem;
-      background-color: #007bff;
-      color: #fff;
+      background-color: blue;
+      color: white;
       border: none;
       border-radius: 5px;
       cursor: pointer;
     }
-
-    #startButton:disabled {
-      background-color: #ccc;
-      cursor: not-allowed;
+    button:active {
+      transform: scale(0.98);
+    }
+    #message {
+      margin-top: 20px;
+      font-size: 1.4rem;
+    }
+    /* Bubble styles */
+    .bubble {
+      position: absolute;
+      background: rgba(135, 206, 250, 0.7);
+      border-radius: 50%;
+      opacity: 0;
+      animation: rise 2s ease-out forwards;
+    }
+    @keyframes rise {
+      0% {
+        transform: translateY(0) scale(0.5);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(-150px) scale(1);
+        opacity: 0;
+      }
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Shake Me!</h1>
-    <p id="message">Click "Start" to enable shake detection.</p>
-    <button id="startButton">Start</button>
+    <button id="liftEarnButton">lift and earn</button>
+    <div id="message"></div>
   </div>
+
   <script>
-    // Threshold for shake detection (adjust as needed)
-    const SHAKE_THRESHOLD = 15;
+    // Get references to DOM elements
+    const liftEarnButton = document.getElementById('liftEarnButton');
+    const messageDiv = document.getElementById('message');
+    let shakeDetected = false;
+    let motionListener = null;
+    const shakeThreshold = 3; // Threshold for deviation from gravity in m/s²
 
-    // Variables to track shake intensity
-    let lastX = null;
-    let lastY = null;
-    let lastZ = null;
+    // Helper function to create bubbles on the screen
+    function createBubbles(count = 10) {
+      for (let i = 0; i < count; i++) {
+        const bubble = document.createElement('div');
+        bubble.classList.add('bubble');
+        // Random size between 20 and 50px
+        const size = Math.random() * 30 + 20;
+        bubble.style.width = `${size}px`;
+        bubble.style.height = `${size}px`;
+        // Random position on the horizontal axis within the viewport
+        bubble.style.left = Math.random() * (window.innerWidth - size) + 'px';
+        // Start at the bottom of the viewport
+        bubble.style.top = window.innerHeight - size + 'px';
+        // Random delay for animation effect
+        bubble.style.animationDelay = Math.random() * 0.5 + 's';
+        document.body.appendChild(bubble);
+        // Remove bubble from DOM after animation ends
+        bubble.addEventListener('animationend', () => {
+          bubble.remove();
+        });
+      }
+    }
 
-    // Function to handle device motion
+    // Function to handle the sensor events
     function handleMotion(event) {
-      const { x, y, z } = event.accelerationIncludingGravity;
-
-      if (lastX === null || lastY === null || lastZ === null) {
-        // Initialize the last positions
-        lastX = x;
-        lastY = y;
-        lastZ = z;
-        return;
+      // Use acceleration including gravity (note: event.acceleration might be null on some devices)
+      const acc = event.accelerationIncludingGravity;
+      if (!acc) return;
+      
+      // Calculate the magnitude of acceleration vector
+      const x = acc.x || 0;
+      const y = acc.y || 0;
+      const z = acc.z || 0;
+      const magnitude = Math.sqrt(x * x + y * y + z * z);
+      
+      // The device at rest should measure around 9.8 m/s² due to gravity.
+      // We check if the deviation exceeds our threshold.
+      if (Math.abs(magnitude - 9.8) > shakeThreshold) {
+        shakeDetected = true;
       }
+    }
 
-      // Calculate the difference between current and last positions
-      const deltaX = Math.abs(x - lastX);
-      const deltaY = Math.abs(y - lastY);
-      const deltaZ = Math.abs(z - lastZ);
+    // Function to stop listening to sensor events
+    function stopMotionListening() {
+      if (motionListener) {
+        window.removeEventListener('devicemotion', motionListener);
+        motionListener = null;
+      }
+    }
 
-      // Check if the shake intensity exceeds the threshold
-      if (deltaX + deltaY + deltaZ > SHAKE_THRESHOLD) {
-        showMessage("Threshold reached! Great shake!");
+    // Function to request motion sensor access (required on iOS 13+)
+    function requestMotionPermission() {
+      if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
+        DeviceMotionEvent.requestPermission()
+          .then(response => {
+            if (response === 'granted') {
+              startMotionListening();
+            } else {
+              messageDiv.textContent = 'Permission not granted to access motion sensors.';
+            }
+          })
+          .catch(err => {
+            console.error(err);
+            messageDiv.textContent = 'Error requesting permission.';
+          });
       } else {
-        showMessage("Shake detection active...");
-      }
-
-      // Update last positions
-      lastX = x;
-      lastY = y;
-      lastZ = z;
-    }
-
-    // Function to update the message
-    function showMessage(text) {
-      const messageElement = document.getElementById("message");
-      messageElement.textContent = text;
-    }
-
-    // Function to start shake detection
-    function startShakeDetection() {
-      if (window.DeviceMotionEvent) {
-        window.addEventListener("devicemotion", handleMotion);
-        showMessage("Shake detection active...");
-        document.getElementById("startButton").disabled = true;
-      } else {
-        showMessage("Device motion not supported on this device.");
+        // For browsers that do not require permission
+        startMotionListening();
       }
     }
 
-    // Add event listener to the button
-    document.getElementById("startButton").addEventListener("click", startShakeDetection);
+    // Function to start listening to motion events for 1 second
+    function startMotionListening() {
+      shakeDetected = false;
+      motionListener = handleMotion;
+      window.addEventListener('devicemotion', motionListener);
+      
+      // Listen for one second, then evaluate if shaking occurred.
+      setTimeout(() => {
+        stopMotionListening();
+        if (shakeDetected) {
+          // Show bubbles and message
+          createBubbles(15);
+          messageDiv.textContent = 'Congrats, your training is logged!';
+        } else {
+          messageDiv.textContent = 'No shaking detected. Try again!';
+        }
+      }, 1000);
+    }
+
+    // Button click event handler
+    liftEarnButton.addEventListener('click', () => {
+      // Clear any previous messages
+      messageDiv.textContent = '';
+      // Request sensor access and then listen for shaking
+      requestMotionPermission();
+    });
   </script>
 </body>
 </html>
+
