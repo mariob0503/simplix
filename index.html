@@ -56,9 +56,11 @@
       font-size: 1.3rem;
       margin-bottom: 10px;
     }
+    /* Update points balance styling: blue and bold */
     #pointsCounter {
       font-size: 1.5rem;
-      color: #FFD700;
+      color: #0091EA;
+      font-weight: bold;
       margin-bottom: 10px;
     }
     /* Shake progress bar container (horizontal) */
@@ -71,11 +73,11 @@
       overflow: hidden;
       margin-top: 10px;
     }
-    /* Shake progress bar fill */
+    /* Shake progress bar fill (blue now) */
     #shakeProgress {
       width: 0%;
       height: 100%;
-      background-color: #FFD700;
+      background-color: #0091EA;
     }
     /* Tilt progress bar container (vertical) */
     #tiltProgressContainer {
@@ -87,11 +89,11 @@
       position: relative;
       overflow: hidden;
     }
-    /* Tilt progress bar fill */
+    /* Tilt progress bar fill (blue now) */
     #tiltProgress {
       width: 100%;
       height: 0%;
-      background-color: #FFD700;
+      background-color: #0091EA;
       position: absolute;
       bottom: 0;
     }
@@ -182,7 +184,7 @@
   <div id="arrow">⬆️</div>
 
   <script>
-    // Wrap all initialization code inside DOMContentLoaded to ensure the DOM is ready.
+    // Wrap all initialization code in DOMContentLoaded
     document.addEventListener('DOMContentLoaded', () => {
       // Get references to elements.
       let sensorReadingsDiv = document.getElementById('sensorReadings');
@@ -254,13 +256,13 @@
       // Success Screen Display
       function showSuccessScreen(contentHTML) {
         centerDisplay.innerHTML = contentHTML +
-          '<div style="font-size:1.5rem; color:#FFD700; margin-top:10px;">PowerPoints: ' + totalPoints + '</div>';
+          '<div style="font-size:1.5rem; color:#0091EA; font-weight:bold; margin-top:10px;">PowerPoints: ' + totalPoints + '</div>';
       }
 
       // Shake Success: Show a shaking protein bottle for 3 seconds.
       function showShakeSuccessScreen() {
-        const contentHTML = "<h1 style='font-size:3rem; margin-bottom:20px;'>PowerPoints taken!</h1>" +
-          "<div id='shakeAnimation' style='font-size:4rem; text-align:center; padding:20px;'>🥤</div>";
+        const contentHTML = "<div style='font-size:1.5rem; color:#0091EA; font-weight:bold; margin-bottom:10px;'>PowerPoints taken!</div>" +
+          "<div id='shakeAnimation' style='font-size:1.5rem; color:#ffffff; text-align:center; padding:20px;'>🥤</div>";
         showSuccessScreen(contentHTML);
         const shakeElement = document.getElementById('shakeAnimation');
         shakeElement.style.animation = "shake 0.5s infinite";
@@ -269,13 +271,13 @@
         }, 3000);
       }
       function showTiltSuccessScreen() {
-        const contentHTML = "<h1 style='font-size:3rem; margin-bottom:20px;'>PowerPoints taken!</h1>" +
-          "<div style='font-size:4rem; text-align:center; padding:20px;'>🎈🎈🎈<br>Tilt Mastery Achieved!</div>";
+        const contentHTML = "<div style='font-size:1.5rem; color:#0091EA; font-weight:bold; margin-bottom:10px;'>PowerPoints taken!</div>" +
+          "<div style='font-size:1.5rem; color:#ffffff; text-align:center; padding:20px;'>🎈🎈🎈<br>Tilt Mastery Achieved!</div>";
         showSuccessScreen(contentHTML);
       }
       function showSwipeSuccessScreen() {
-        const contentHTML = "<h1 style='font-size:3rem; margin-bottom:20px;'>PowerPoints taken!</h1>" +
-          "<div style='font-size:4rem; text-align:center; padding:20px;'>⬆️⬆️⬆️<br>Speedy Swipe Success!</div>";
+        const contentHTML = "<div style='font-size:1.5rem; color:#0091EA; font-weight:bold; margin-bottom:10px;'>PowerPoints taken!</div>" +
+          "<div style='font-size:1.5rem; color:#ffffff; text-align:center; padding:20px;'>⬆️⬆️⬆️<br>Speedy Swipe Success!</div>";
         showSuccessScreen(contentHTML);
       }
 
