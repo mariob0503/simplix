@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Lift&Learn Gesture Testing</title>
+  <title>Lift & Learn</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     /* Global styling using a Simplix-inspired palette */
@@ -21,24 +21,21 @@
       top: 0;
       width: 100%;
       text-align: center;
-      padding: 10px 0;
-      font-size: 1.43rem;
-      line-height: 1.3;
+      padding: 20px 0;
       z-index: 10;
-      pointer-events: none;
     }
-    /* Accent color classes */
-    .blue { color: #0091EA; }
-    .blue-bold { color: #0091EA; font-weight: bold; }
-    /* Big and bold styling for Lift&Learn */
-    .big-bold {
+    #flag .big-bold {
       font-size: 2.86rem;
       font-weight: bold;
+    }
+    #flag .subtitle {
+      font-size: 1.5rem;
+      margin-top: 5px;
     }
     /* Center container for sensor readings / success screens */
     #centerDisplay {
       position: absolute;
-      top: 60%;
+      top: 60%; /* Moved down so it doesn’t overlap the flag */
       left: 50%;
       transform: translate(-50%, -50%);
       text-align: center;
@@ -138,15 +135,10 @@
   </style>
 </head>
 <body>
-  <!-- Fancy Flag at the top -->
+  <!-- Flag -->
   <div id="flag">
-    <div>Welcome to</div>
-    <div class="big-bold">
-      <span class="blue">Lift</span>&Learn
-    </div>
-    <div>your <strong><span class="blue">Simplix</span> Gym Reward System</strong></div>
-    <div>collect your <strong><span class="blue-bold">Power</span>Points</strong></div>
-    <div>and get great discounts on Supplements</div>
+    <div class="big-bold">Lift & Learn</div>
+    <div class="subtitle">Simplix Gym Reward</div>
   </div>
 
   <!-- Center container (initially shows sensor readings) -->
@@ -168,6 +160,7 @@
   <div id="arrow">⬆️</div>
 
   <script>
+    // Reassign these on reset.
     let sensorReadingsDiv = document.getElementById('sensorReadings');
     let messageDiv = document.getElementById('message');
     let pointsCounterDiv = document.getElementById('pointsCounter');
@@ -179,7 +172,7 @@
     let deviceOrientationText = '';
     let sensorListenersAdded = false;
 
-    // Throttle sensor updates: update at most once every 500ms.
+    // Throttle sensor updates: at most once every 500ms.
     let lastSensorUpdate = 0;
     function updateSensorReadings() {
       const now = Date.now();
@@ -240,7 +233,7 @@
         '<div style="font-size:1.5rem; color:#FFD700; margin-top:10px;">PowerPoints: ' + totalPoints + '</div>';
     }
 
-    // Shake Success: Show a shaking protein bottle for three seconds.
+    // Shake Success: Show a shaking protein bottle for 3 seconds.
     function showShakeSuccessScreen() {
       const contentHTML = "<h1 style='font-size:3rem; margin-bottom:20px;'>PowerPoints taken!</h1>" +
         "<div id='shakeAnimation' style='font-size:4rem; text-align:center; padding:20px;'>🥤</div>";
@@ -270,12 +263,11 @@
     let shakeMotionListener = null;
     let shakeTimeout = null;
     let shakeStartTime = null; // For continuous shaking duration tracking
-    // <<< This is the threshold for shake detection. It was previously set to 12 m/s².
-    // Here we reduce it to 6 m/s² for easier detection.
-    const shakeAccelerationThreshold = 2; // m/s² (Reduced threshold)
+    // <<< Threshold setting: The following line defines the shake acceleration threshold.
+    const shakeAccelerationThreshold = 3; // m/s² (Reduced threshold; adjust here if needed)
     // >>>
-    const shakeListeningTime = 10000; // 10 seconds
-    const requiredShakeDuration = 3000; // 3 seconds (3000ms)
+    const shakeListeningTime = 10000; // 10 seconds overall
+    const requiredShakeDuration = 3000; // 3 seconds (3000ms) required continuous shake
 
     function handleShakeMotion(event) {
       let acc = event.acceleration;
