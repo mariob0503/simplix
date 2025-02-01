@@ -23,30 +23,44 @@
       padding: 10px 0;
       /* Reduced font sizes: 65% of previous values */
       font-size: 1.43rem; /* Previously 2.2rem */
-      color: white; /* All white text */
+      color: white; /* Default text white */
       line-height: 1.3;
-      /* Lower the flag in the stacking order so it doesn't block buttons */
       z-index: 1;
-      pointer-events: none;  /* Allow clicks to pass through if overlapping */
+      pointer-events: none;
     }
+    /* Special inline classes for blue words */
+    .blue { color: blue; }
+    .blue-bold { color: blue; font-weight: bold; }
     /* Big and bold styling for Lift&Learn (reduced by 35%) */
     .big-bold {
       font-size: 2.86rem; /* Previously 4.4rem */
       font-weight: bold;
     }
-    /* Bold styling for specific lines */
-    strong {
-      font-weight: bold;
-    }
-    /* Container for buttons positioned at the bottom center */
+    /* Container for messages and buttons (fixed at the bottom) */
     .container {
       position: absolute;
-      bottom: 20px;
+      bottom: 0;
       left: 50%;
       transform: translateX(-50%);
+      width: 100%;
+      height: 120px; /* fixed height so buttons remain in the same spot */
       text-align: center;
-      /* Ensure this container is above the flag */
       z-index: 10;
+    }
+    /* Fixed message area above the buttons */
+    #message {
+      position: absolute;
+      top: 0;
+      width: 100%;
+      font-size: 1.3rem;
+      color: white;
+      margin: 0;
+    }
+    /* Buttons container: fixed at the bottom of the overall container */
+    .buttons {
+      position: absolute;
+      bottom: 20px;
+      width: 100%;
     }
     button {
       padding: 10px 20px;
@@ -60,12 +74,6 @@
     }
     button:active {
       transform: scale(0.98);
-    }
-    #message {
-      margin: 20px;
-      font-size: 1.3rem;
-      text-align: center;
-      color: white;
     }
     /* Bubble (balloon) styles for success feedback */
     .bubble {
@@ -88,7 +96,7 @@
     /* Arrow styling and animation for the swipe prompt */
     #arrow {
       position: absolute;
-      bottom: 80px; /* slightly above the buttons */
+      bottom: 140px; /* slightly above the fixed container */
       left: 50%;
       transform: translateX(-50%);
       font-size: 3rem;
@@ -101,7 +109,7 @@
     }
     @keyframes swipeArrow {
       0% {
-        bottom: 80px;
+        bottom: 140px;
         opacity: 1;
       }
       100% {
@@ -115,19 +123,23 @@
   <!-- Fancy Flag at the top -->
   <div id="flag">
     <div>Welcome to</div>
-    <div class="big-bold">Lift&Learn</div>
-    <div>your <strong>Simplix Gym Reward System</strong></div>
-    <div>collect your <strong>PowerPoints</strong></div>
+    <div class="big-bold">
+      <span class="blue">Lift</span>&Learn
+    </div>
+    <div>your <strong><span class="blue">Simplix</span> Gym Reward System</strong></div>
+    <div>collect your <strong><span class="blue-bold">Power</span>Points</strong></div>
     <div>and get great discounts on Supplements</div>
   </div>
 
-  <!-- Container for gesture test buttons and messages (now at the bottom) -->
+  <!-- Container for messages and buttons fixed at the bottom -->
   <div class="container">
-    <button id="shakeButton">Test Shake</button>
-    <button id="tiltButton">Test Tilt</button>
-    <button id="swipeButton">Test Swipe</button>
-    <button id="resetButton">Reset</button>
     <div id="message"></div>
+    <div class="buttons">
+      <button id="shakeButton">Test Shake</button>
+      <button id="tiltButton">Test Tilt</button>
+      <button id="swipeButton">Test Swipe</button>
+      <button id="resetButton">Reset</button>
+    </div>
   </div>
 
   <!-- Arrow element for swipe test prompt -->
@@ -158,154 +170,4 @@
         if (!shakeDetected) {
           shakeDetected = true;
           if (shakeTimeout) clearTimeout(shakeTimeout);
-          stopShakeListening();
-          createBubbles(15);
-          messageDiv.textContent = 'Congrats, shake detected!';
-        }
-      }
-    }
-
-    function stopShakeListening() {
-      if (shakeMotionListener) {
-        window.removeEventListener('devicemotion', shakeMotionListener);
-        shakeMotionListener = null;
-      }
-      if (shakeTimeout) {
-        clearTimeout(shakeTimeout);
-        shakeTimeout = null;
-      }
-    }
-
-    function startShakeTest() {
-      shakeDetected = false;
-      messageDiv.textContent = 'Shake: Please shake your phone...';
-      if (typeof DeviceMotionEvent !== 'undefined' &&
-          typeof DeviceMotionEvent.requestPermission === 'function') {
-        DeviceMotionEvent.requestPermission()
-          .then(response => {
-            if (response === 'granted') {
-              shakeMotionListener = handleShakeMotion;
-              window.addEventListener('devicemotion', shakeMotionListener);
-            } else {
-              messageDiv.textContent = 'Permission not granted for motion sensors.';
-            }
-          })
-          .catch(err => {
-            console.error(err);
-            messageDiv.textContent = 'Error requesting motion sensor permission.';
-          });
-      } else {
-        shakeMotionListener = handleShakeMotion;
-        window.addEventListener('devicemotion', shakeMotionListener);
-      }
-      shakeTimeout = setTimeout(() => {
-        stopShakeListening();
-        if (!shakeDetected) {
-          messageDiv.textContent = 'No shaking detected. Try again!';
-        }
-      }, shakeListeningTime);
-    }
-
-    shakeButton.addEventListener('click', startShakeTest);
-
-    /* =========================
-       2. Tilt Test
-       ========================= */
-    const tiltButton = document.getElementById('tiltButton');
-    let tiltTriggered = false;
-    const tiltThreshold = -30;  // beta angle (degrees): tilt forward
-    const returnThreshold = 10; // near upright
-
-    function handleTilt(event) {
-      const beta = event.beta; // front-to-back tilt in degrees
-      if (beta < tiltThreshold && !tiltTriggered) {
-        tiltTriggered = true;
-        messageDiv.textContent = 'Tilt detected! Now return to upright...';
-      }
-      if (tiltTriggered && Math.abs(beta) < returnThreshold) {
-        createBubbles(15);
-        messageDiv.textContent = 'Congrats, tilt detected!';
-        window.removeEventListener('deviceorientation', handleTilt);
-        tiltTriggered = false;
-      }
-    }
-
-    function startTiltTest() {
-      messageDiv.textContent = 'Tilt: Tilt your phone forward and then return upright.';
-      window.addEventListener('deviceorientation', handleTilt);
-    }
-
-    tiltButton.addEventListener('click', startTiltTest);
-
-    /* =========================
-       3. Swipe Test
-       ========================= */
-    const swipeButton = document.getElementById('swipeButton');
-    let touchStartY = null;
-    let touchEndY = null;
-
-    function handleTouchStart(e) {
-      touchStartY = e.changedTouches[0].screenY;
-    }
-    function handleTouchEnd(e) {
-      touchEndY = e.changedTouches[0].screenY;
-      const deltaY = touchStartY - touchEndY;
-      if (deltaY > 50) {
-        createBubbles(15);
-        messageDiv.textContent = 'Congrats, swipe detected!';
-      } else {
-        messageDiv.textContent = 'Swipe too short. Try again!';
-      }
-      document.removeEventListener('touchstart', handleTouchStart);
-      document.removeEventListener('touchend', handleTouchEnd);
-    }
-
-    function startSwipeTest() {
-      messageDiv.textContent = 'Swipe: Swipe up on the screen.';
-      // Show the arrow prompt immediately
-      arrowDiv.style.display = 'block';
-      arrowDiv.classList.add('animate-arrow');
-      arrowDiv.addEventListener('animationend', () => {
-        arrowDiv.classList.remove('animate-arrow');
-      }, {once: true});
-      document.addEventListener('touchstart', handleTouchStart);
-      document.addEventListener('touchend', handleTouchEnd);
-    }
-
-    swipeButton.addEventListener('click', startSwipeTest);
-
-    /* =========================
-       4. Reset Button
-       ========================= */
-    const resetButton = document.getElementById('resetButton');
-    resetButton.addEventListener('click', () => {
-      messageDiv.textContent = '';
-      arrowDiv.style.display = 'none';
-      stopShakeListening();
-      window.removeEventListener('deviceorientation', handleTilt);
-      document.removeEventListener('touchstart', handleTouchStart);
-      document.removeEventListener('touchend', handleTouchEnd);
-    });
-
-    /* =========================
-       Helper: Bubble Animation (used for success feedback)
-       ========================= */
-    function createBubbles(count = 10) {
-      for (let i = 0; i < count; i++) {
-        const bubble = document.createElement('div');
-        bubble.classList.add('bubble');
-        const size = Math.random() * 30 + 20; // random size between 20 and 50px
-        bubble.style.width = `${size}px`;
-        bubble.style.height = `${size}px`;
-        bubble.style.left = Math.random() * (window.innerWidth - size) + 'px';
-        bubble.style.top = window.innerHeight - size + 'px';
-        bubble.style.animationDelay = Math.random() * 0.5 + 's';
-        document.body.appendChild(bubble);
-        bubble.addEventListener('animationend', () => {
-          bubble.remove();
-        });
-      }
-    }
-  </script>
-</body>
-</html>
+          stopShakeList
