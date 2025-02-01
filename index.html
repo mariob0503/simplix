@@ -10,7 +10,7 @@
       margin: 0;
       padding: 0;
       height: 100%;
-      background-color: #121212;  /* Dark background */
+      background-color: #121212;
       font-family: Arial, sans-serif;
       overflow: hidden;
       color: #ffffff;
@@ -28,13 +28,8 @@
       pointer-events: none;
     }
     /* Accent color classes */
-    .blue { 
-      color: #0091EA; 
-    }
-    .blue-bold { 
-      color: #0091EA; 
-      font-weight: bold; 
-    }
+    .blue { color: #0091EA; }
+    .blue-bold { color: #0091EA; font-weight: bold; }
     /* Big and bold styling for Lift&Learn */
     .big-bold {
       font-size: 2.86rem;
@@ -43,7 +38,7 @@
     /* Center container for sensor readings / success screens */
     #centerDisplay {
       position: absolute;
-      top: 60%; /* Moved down so it doesn’t overlap the flag */
+      top: 60%;
       left: 50%;
       transform: translate(-50%, -50%);
       text-align: center;
@@ -62,7 +57,7 @@
     }
     #pointsCounter {
       font-size: 1.5rem;
-      color: #FFD700; /* Gold for PowerPoints */
+      color: #FFD700;
       margin-bottom: 10px;
     }
     /* Shake progress bar container */
@@ -93,7 +88,7 @@
       padding: 10px 20px;
       margin: 5px;
       font-size: 1.1rem;
-      background-color: #0091EA; /* Simplix blue accent */
+      background-color: #0091EA;
       color: #ffffff;
       border: none;
       border-radius: 5px;
@@ -102,7 +97,7 @@
     button:active {
       transform: scale(0.98);
     }
-    /* (Optional) Big bubble style for tilt success */
+    /* Big bubble style for tilt success */
     .bubble {
       position: absolute;
       background: rgba(0, 145, 234, 0.7);
@@ -111,14 +106,8 @@
       animation: rise 2s ease-out forwards;
     }
     @keyframes rise {
-      0% {
-        transform: translateY(0) scale(0.5);
-        opacity: 1;
-      }
-      100% {
-        transform: translateY(-150px) scale(1);
-        opacity: 0;
-      }
+      0% { transform: translateY(0) scale(0.5); opacity: 1; }
+      100% { transform: translateY(-150px) scale(1); opacity: 0; }
     }
     /* Arrow styling and animation for swipe prompt */
     #arrow {
@@ -135,14 +124,8 @@
       animation: swipeArrow 1.5s ease-out forwards;
     }
     @keyframes swipeArrow {
-      0% {
-        bottom: 140px;
-        opacity: 1;
-      }
-      100% {
-        bottom: 90%;
-        opacity: 0;
-      }
+      0% { bottom: 140px; opacity: 1; }
+      100% { bottom: 90%; opacity: 0; }
     }
     /* CSS animation for shaking protein bottle */
     @keyframes shake {
@@ -185,14 +168,13 @@
   <div id="arrow">⬆️</div>
 
   <script>
-    // Declare these with 'let' so we can reassign on reset.
     let sensorReadingsDiv = document.getElementById('sensorReadings');
     let messageDiv = document.getElementById('message');
     let pointsCounterDiv = document.getElementById('pointsCounter');
     const centerDisplay = document.getElementById('centerDisplay');
     const arrowDiv = document.getElementById('arrow');
 
-    /* --- Global sensor data variables --- */
+    /* Global sensor data variables */
     let devicemotionText = '';
     let deviceOrientationText = '';
     let sensorListenersAdded = false;
@@ -208,7 +190,7 @@
       }
     }
 
-    // Utility: Format sensor value so that only full (rounded) digits are shown.
+    // Utility: Format sensor value to show only full (rounded) digits.
     function formatValue(val) {
       if (val === null) return 0;
       let rounded = Math.round(val);
@@ -222,14 +204,12 @@
         pointsCounterDiv.textContent = 'PowerPoints: ' + totalPoints;
       }
     }
-    // Award points.
     function addPoints(pts) {
       totalPoints += pts;
       updatePointsCounter();
     }
 
-    // --- Sensor Reading Handlers ---
-    // "Strength Metrics" (acceleration/rotation)
+    // Sensor Reading Handlers
     function sensorDataUpdate(event) {
       let accIG = event.accelerationIncludingGravity;
       let acc = event.acceleration;
@@ -246,7 +226,6 @@
       }
       updateSensorReadings();
     }
-    // "Form & Balance" (orientation)
     function sensorOrientationUpdate(event) {
       deviceOrientationText = "<strong>Form &amp; Balance:</strong><br>";
       deviceOrientationText += `Alpha=${formatValue(event.alpha)}, `;
@@ -255,50 +234,46 @@
       updateSensorReadings();
     }
 
-    /* --- Success Screen Display ---
-         When an activity is complete, update the centerDisplay
-         to show a persistent success message/image along with the current PowerPoints balance.
-    */
+    // Success Screen Display
     function showSuccessScreen(contentHTML) {
       centerDisplay.innerHTML = contentHTML +
         '<div style="font-size:1.5rem; color:#FFD700; margin-top:10px;">PowerPoints: ' + totalPoints + '</div>';
     }
 
-    // Shake success: Show a shaking Protein Bottle for three seconds.
+    // Shake Success: Show a shaking protein bottle for three seconds.
     function showShakeSuccessScreen() {
       const contentHTML = "<h1 style='font-size:3rem; margin-bottom:20px;'>PowerPoints taken!</h1>" +
         "<div id='shakeAnimation' style='font-size:4rem; text-align:center; padding:20px;'>🥤</div>";
       showSuccessScreen(contentHTML);
       const shakeElement = document.getElementById('shakeAnimation');
-      // Apply the shaking animation to simulate a protein bottle being shaken.
       shakeElement.style.animation = "shake 0.5s infinite";
-      // Remove the animation after 3 seconds.
       setTimeout(() => {
         shakeElement.style.animation = "";
       }, 3000);
     }
-    // Tilt success: Big balloons.
     function showTiltSuccessScreen() {
       const contentHTML = "<h1 style='font-size:3rem; margin-bottom:20px;'>PowerPoints taken!</h1>" +
         "<div style='font-size:4rem; text-align:center; padding:20px;'>🎈🎈🎈<br>Tilt Mastery Achieved!</div>";
       showSuccessScreen(contentHTML);
     }
-    // Swipe success: Big blue arrows.
     function showSwipeSuccessScreen() {
       const contentHTML = "<h1 style='font-size:3rem; margin-bottom:20px;'>PowerPoints taken!</h1>" +
         "<div style='font-size:4rem; text-align:center; padding:20px;'>⬆️⬆️⬆️<br>Speedy Swipe Success!</div>";
       showSuccessScreen(contentHTML);
     }
 
-    /* --- Gesture Test Code --- */
+    // Gesture Test Code
 
     /* 1. Shake */
     const shakeButton = document.getElementById('shakeButton');
     let shakeDetected = false;
     let shakeMotionListener = null;
     let shakeTimeout = null;
-    let shakeStartTime = null; // For tracking continuous shaking time
-    const shakeAccelerationThreshold = 12; // m/s²
+    let shakeStartTime = null; // For continuous shaking duration tracking
+    // <<< This is the threshold for shake detection. It was previously set to 12 m/s².
+    // Here we reduce it to 6 m/s² for easier detection.
+    const shakeAccelerationThreshold = 6; // m/s² (Reduced threshold)
+    // >>>
     const shakeListeningTime = 10000; // 10 seconds
     const requiredShakeDuration = 3000; // 3 seconds (3000ms)
 
@@ -312,18 +287,15 @@
       const z = acc.z !== null ? formatValue(acc.z) : 0;
       const magnitude = Math.sqrt(x * x + y * y + z * z);
       if (magnitude > shakeAccelerationThreshold) {
-        // Start (or continue) counting the shaking duration.
         if (shakeStartTime === null) {
           shakeStartTime = Date.now();
         }
         let elapsed = Date.now() - shakeStartTime;
-        // Update progress bar (if exists).
         let progressElem = document.getElementById('shakeProgress');
         if (progressElem) {
           let percent = Math.min(100, (elapsed / requiredShakeDuration) * 100);
           progressElem.style.width = percent + '%';
         }
-        // If shaking has been sustained for 3 seconds, trigger success.
         if (elapsed >= requiredShakeDuration && !shakeDetected) {
           shakeDetected = true;
           if (shakeTimeout) clearTimeout(shakeTimeout);
@@ -332,7 +304,6 @@
           showShakeSuccessScreen();
         }
       } else {
-        // If the acceleration falls below threshold, reset the timer and progress bar.
         shakeStartTime = null;
         let progressElem = document.getElementById('shakeProgress');
         if (progressElem) {
@@ -340,7 +311,6 @@
         }
       }
     }
-
     function stopShakeListening() {
       if (shakeMotionListener) {
         window.removeEventListener('devicemotion', shakeMotionListener);
@@ -351,11 +321,9 @@
         shakeTimeout = null;
       }
     }
-
     function startShakeTest() {
       shakeDetected = false;
       shakeStartTime = null;
-      // Update the center display to include a progress bar.
       centerDisplay.innerHTML = 
         '<div id="sensorReadings">Waiting for sensor data...</div>' +
         '<div id="message">Shake: Shake your phone like you’re lifting heavy weights!</div>' +
@@ -366,7 +334,6 @@
       sensorReadingsDiv = document.getElementById('sensorReadings');
       messageDiv = document.getElementById('message');
       pointsCounterDiv = document.getElementById('pointsCounter');
-      // Add sensor listeners if not already added.
       if (!sensorListenersAdded) {
         window.addEventListener('devicemotion', sensorDataUpdate);
         window.addEventListener('deviceorientation', sensorOrientationUpdate);
@@ -391,11 +358,9 @@
         shakeMotionListener = handleShakeMotion;
         window.addEventListener('devicemotion', shakeMotionListener);
       }
-      // Set a timeout to end the shake test after a fixed period.
       shakeTimeout = setTimeout(() => {
         stopShakeListening();
         if (!shakeDetected) {
-          // If shaking was initiated but did not reach 3 seconds, show "Shake harder!".
           if (shakeStartTime !== null && (Date.now() - shakeStartTime < requiredShakeDuration)) {
             messageDiv.textContent = 'Shake harder!';
           } else {
@@ -409,7 +374,6 @@
     /* 2. Tilt */
     const tiltButton = document.getElementById('tiltButton');
     let tiltBaseline = null;
-    // Tilt triggers when the beta angle changes by 90° from the starting value.
     function handleTilt(event) {
       const currentBeta = event.beta !== null ? formatValue(event.beta) : 0;
       if (tiltBaseline === null) {
@@ -463,12 +427,10 @@
     /* 4. Reset */
     const resetButton = document.getElementById('resetButton');
     function resetDisplay() {
-      // Restore the default center display with sensor readings and messages.
       centerDisplay.innerHTML =
         '<div id="sensorReadings">Waiting for sensor data...</div>' +
         '<div id="message"></div>' +
         '<div id="pointsCounter">PowerPoints: ' + totalPoints + '</div>';
-      // Reassign the elements.
       sensorReadingsDiv = document.getElementById('sensorReadings');
       messageDiv = document.getElementById('message');
       pointsCounterDiv = document.getElementById('pointsCounter');
