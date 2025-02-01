@@ -39,7 +39,7 @@
       font-size: 1.3rem;
       text-align: center;
     }
-    /* Bubble styles (for shake feedback) */
+    /* Bubble styles (for success feedback) */
     .bubble {
       position: absolute;
       background: rgba(135, 206, 250, 0.7);
@@ -57,7 +57,7 @@
         opacity: 0;
       }
     }
-    /* Arrow animation for swipe */
+    /* Arrow animation for swipe prompt */
     #arrow {
       position: absolute;
       bottom: 20px;
@@ -90,7 +90,7 @@
     <button id="resetButton">Reset</button>
     <div id="message"></div>
   </div>
-  <!-- Arrow element for swipe test -->
+  <!-- Arrow element for swipe test prompt -->
   <div id="arrow">⬆️</div>
 
   <script>
@@ -103,6 +103,7 @@
     const shakeButton = document.getElementById('shakeButton');
     let shakeDetected = false;
     let shakeMotionListener = null;
+    let shakeTimeout = null;
     const shakeThreshold = 3; // m/s² deviation from 9.8
     const shakeListeningTime = 10000; // 10 seconds
 
@@ -112,9 +113,15 @@
       const x = acc.x || 0;
       const y = acc.y || 0;
       const z = acc.z || 0;
-      const magnitude = Math.sqrt(x*x + y*y + z*z);
+      const magnitude = Math.sqrt(x * x + y * y + z * z);
       if (Math.abs(magnitude - 9.8) > shakeThreshold) {
-        shakeDetected = true;
+        if (!shakeDetected) {
+          shakeDetected = true;
+          if (shakeTimeout) clearTimeout(shakeTimeout);
+          stopShakeListening();
+          createBubbles(15);
+          messageDiv.textContent = 'Congrats, shake detected!';
+        }
       }
     }
 
@@ -123,12 +130,15 @@
         window.removeEventListener('devicemotion', shakeMotionListener);
         shakeMotionListener = null;
       }
+      if (shakeTimeout) {
+        clearTimeout(shakeTimeout);
+        shakeTimeout = null;
+      }
     }
 
     function startShakeTest() {
       shakeDetected = false;
-      messageDiv.textContent = 'Shake: Please shake your phone for 10 seconds...';
-      // Request sensor permission if needed
+      messageDiv.textContent = 'Shake: Please shake your phone...';
       if (typeof DeviceMotionEvent !== 'undefined' &&
           typeof DeviceMotionEvent.requestPermission === 'function') {
         DeviceMotionEvent.requestPermission()
@@ -148,14 +158,9 @@
         shakeMotionListener = handleShakeMotion;
         window.addEventListener('devicemotion', shakeMotionListener);
       }
-
-      setTimeout(() => {
+      shakeTimeout = setTimeout(() => {
         stopShakeListening();
-        if (shakeDetected) {
-          // Create bubbles for feedback
-          createBubbles(15);
-          messageDiv.textContent = 'Congrats, shake detected!';
-        } else {
+        if (!shakeDetected) {
           messageDiv.textContent = 'No shaking detected. Try again!';
         }
       }, shakeListeningTime);
@@ -172,12 +177,13 @@
     const returnThreshold = 10; // near upright
 
     function handleTilt(event) {
-      const beta = event.beta; // front-to-back tilt
+      const beta = event.beta; // front-to-back tilt in degrees
       if (beta < tiltThreshold && !tiltTriggered) {
         tiltTriggered = true;
         messageDiv.textContent = 'Tilt detected! Now return to upright...';
       }
       if (tiltTriggered && Math.abs(beta) < returnThreshold) {
+        createBubbles(15);
         messageDiv.textContent = 'Congrats, tilt detected!';
         window.removeEventListener('deviceorientation', handleTilt);
         tiltTriggered = false;
@@ -204,37 +210,31 @@
     function handleTouchEnd(e) {
       touchEndY = e.changedTouches[0].screenY;
       const deltaY = touchStartY - touchEndY;
-      // Require a minimum upward swipe distance (e.g., 50 pixels)
       if (deltaY > 50) {
-        messageDiv.textContent = 'Swipe detected!';
-        showSwipeArrow();
+        createBubbles(15);
+        messageDiv.textContent = 'Congrats, swipe detected!';
       } else {
         messageDiv.textContent = 'Swipe too short. Try again!';
       }
-      // Remove swipe listeners after a swipe is detected
       document.removeEventListener('touchstart', handleTouchStart);
       document.removeEventListener('touchend', handleTouchEnd);
     }
 
     function startSwipeTest() {
-      messageDiv.textContent = 'Swipe up on the screen.';
-      // Add touch event listeners to detect swipe up anywhere on the page
+      messageDiv.textContent = 'Swipe: Swipe up on the screen.';
+      // Show the arrow prompt immediately
+      arrowDiv.style.display = 'block';
+      arrowDiv.classList.add('animate-arrow');
+      arrowDiv.addEventListener('animationend', () => {
+        arrowDiv.classList.remove('animate-arrow');
+        // Keep the arrow visible as a prompt until a swipe is detected.
+        // (Alternatively, you can hide it immediately if desired.)
+      }, {once: true});
       document.addEventListener('touchstart', handleTouchStart);
       document.addEventListener('touchend', handleTouchEnd);
     }
 
     swipeButton.addEventListener('click', startSwipeTest);
-
-    // Function to show a moving arrow animation for swipe
-    function showSwipeArrow() {
-      arrowDiv.style.display = 'block';
-      arrowDiv.classList.add('animate-arrow');
-      // Remove the animation class after it finishes so it can be replayed
-      arrowDiv.addEventListener('animationend', () => {
-        arrowDiv.classList.remove('animate-arrow');
-        arrowDiv.style.display = 'none';
-      }, {once: true});
-    }
 
     /* =========================
        4. Reset Button
@@ -243,7 +243,6 @@
     resetButton.addEventListener('click', () => {
       messageDiv.textContent = '';
       arrowDiv.style.display = 'none';
-      // Remove any lingering event listeners
       stopShakeListening();
       window.removeEventListener('deviceorientation', handleTilt);
       document.removeEventListener('touchstart', handleTouchStart);
@@ -251,7 +250,7 @@
     });
 
     /* =========================
-       Helper: Bubble Animation (used in Shake Test)
+       Helper: Bubble Animation (used for success feedback)
        ========================= */
     function createBubbles(count = 10) {
       for (let i = 0; i < count; i++) {
@@ -272,3 +271,4 @@
   </script>
 </body>
 </html>
+
