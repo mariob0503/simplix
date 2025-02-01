@@ -24,7 +24,7 @@
       padding: 10px 0;
       font-size: 1.43rem;
       line-height: 1.3;
-      z-index: 1;
+      z-index: 10;
       pointer-events: none;
     }
     /* Accent color classes (using the Simplix blue accent) */
@@ -43,15 +43,16 @@
     /* Center container for sensor readings, messages, and points counter */
     #centerDisplay {
       position: absolute;
-      top: 50%;
+      top: 60%; /* Moved down to avoid overlapping with the flag */
       left: 50%;
       transform: translate(-50%, -50%);
       text-align: center;
-      z-index: 10;
+      z-index: 20;
+      width: 90%;
     }
     /* Styling for sensor readings, messages, and points counter */
     #sensorReadings {
-      font-size: 0.9rem;
+      font-size: 1rem;
       margin-bottom: 10px;
       line-height: 1.4;
     }
@@ -70,7 +71,7 @@
       bottom: 10px;
       width: 100%;
       text-align: center;
-      z-index: 20;
+      z-index: 30;
     }
     button {
       padding: 10px 20px;
@@ -85,7 +86,7 @@
     button:active {
       transform: scale(0.98);
     }
-    /* Bubble (balloon) styles for success feedback */
+    /* Bubble (balloon) styles for tilt success feedback */
     .bubble {
       position: absolute;
       background: rgba(0, 145, 234, 0.7);  /* Accent blue with transparency */
@@ -103,7 +104,7 @@
         opacity: 0;
       }
     }
-    /* Arrow styling and animation for the swipe prompt */
+    /* Arrow styling and animation for swipe prompt */
     #arrow {
       position: absolute;
       bottom: 140px;
@@ -179,12 +180,19 @@
       sensorReadingsDiv.innerHTML = devicemotionText + '<br>' + deviceOrientationText;
     }
 
+    // Utility: Format sensor value so that only full (rounded) digits are shown.
+    function formatValue(val) {
+      if (val === null) return 0;
+      let rounded = Math.round(val);
+      return Math.abs(rounded) < 1 ? 0 : rounded;
+    }
+
     // Points variables
     let totalPoints = 0;
     function updatePointsCounter() {
       pointsCounterDiv.textContent = 'PowerPoints: ' + totalPoints;
     }
-    // Award points and animate a floating reward
+    // Award points and animate a floating reward.
     function addPoints(pts) {
       totalPoints += pts;
       updatePointsCounter();
@@ -209,30 +217,30 @@
       });
     }
 
-    // Handler for devicemotion events – group and label as "Strength Metrics"
+    // Handler for devicemotion events – group as "Strength Metrics"
     function sensorDataUpdate(event) {
       let accIG = event.accelerationIncludingGravity;
       let acc = event.acceleration;
       let rotation = event.rotationRate;
       devicemotionText = "<strong>Strength Metrics:</strong><br>";
       if (accIG) {
-        devicemotionText += `Acc IG: x=${accIG.x !== null ? accIG.x.toFixed(0) : '0'}, y=${accIG.y !== null ? accIG.y.toFixed(0) : '0'}, z=${accIG.z !== null ? accIG.z.toFixed(0) : '0'}.<br>`;
+        devicemotionText += `Acc IG: x=${formatValue(accIG.x)}, y=${formatValue(accIG.y)}, z=${formatValue(accIG.z)}.<br>`;
       }
       if (acc) {
-        devicemotionText += `Acc: x=${acc.x !== null ? acc.x.toFixed(0) : '0'}, y=${acc.y !== null ? acc.y.toFixed(0) : '0'}, z=${acc.z !== null ? acc.z.toFixed(0) : '0'}.<br>`;
+        devicemotionText += `Acc: x=${formatValue(acc.x)}, y=${formatValue(acc.y)}, z=${formatValue(acc.z)}.<br>`;
       }
       if (rotation) {
-        devicemotionText += `Rotation: alpha=${rotation.alpha !== null ? rotation.alpha.toFixed(0) : '0'}, beta=${rotation.beta !== null ? rotation.beta.toFixed(0) : '0'}, gamma=${rotation.gamma !== null ? rotation.gamma.toFixed(0) : '0'}.`;
+        devicemotionText += `Rotation: alpha=${formatValue(rotation.alpha)}, beta=${formatValue(rotation.beta)}, gamma=${formatValue(rotation.gamma)}.`;
       }
       updateSensorReadings();
     }
 
-    // Handler for deviceorientation events – group and label as "Form & Balance"
+    // Handler for deviceorientation events – group as "Form & Balance"
     function sensorOrientationUpdate(event) {
       deviceOrientationText = "<strong>Form &amp; Balance:</strong><br>";
-      deviceOrientationText += `Alpha=${event.alpha !== null ? event.alpha.toFixed(0) : '0'}, `;
-      deviceOrientationText += `Beta=${event.beta !== null ? event.beta.toFixed(0) : '0'}, `;
-      deviceOrientationText += `Gamma=${event.gamma !== null ? event.gamma.toFixed(0) : '0'}.`;
+      deviceOrientationText += `Alpha=${formatValue(event.alpha)}, `;
+      deviceOrientationText += `Beta=${formatValue(event.beta)}, `;
+      deviceOrientationText += `Gamma=${formatValue(event.gamma)}.`;
       updateSensorReadings();
     }
 
@@ -243,28 +251,26 @@
     let shakeDetected = false;
     let shakeMotionListener = null;
     let shakeTimeout = null;
-    // New threshold for shake detection (using acceleration)
+    // Threshold for shake detection (using acceleration)
     const shakeAccelerationThreshold = 12; // m/s²
     const shakeListeningTime = 10000; // 10 seconds
 
     function handleShakeMotion(event) {
       let acc = event.acceleration;
       if (!acc || (acc.x === null && acc.y === null && acc.z === null)) {
-        // Fallback to accelerationIncludingGravity if needed
         acc = event.accelerationIncludingGravity;
       }
-      const x = acc.x || 0;
-      const y = acc.y || 0;
-      const z = acc.z || 0;
+      const x = acc.x !== null ? formatValue(acc.x) : 0;
+      const y = acc.y !== null ? formatValue(acc.y) : 0;
+      const z = acc.z !== null ? formatValue(acc.z) : 0;
       const magnitude = Math.sqrt(x * x + y * y + z * z);
       if (magnitude > shakeAccelerationThreshold && !shakeDetected) {
         shakeDetected = true;
         if (shakeTimeout) clearTimeout(shakeTimeout);
         stopShakeListening();
-        createBubbles(15);
-        // Creative, gym-themed success message for shake
-        messageDiv.textContent = "Boom! You just rocked the gym floor – that shake is a power move!";
-        addPoints(10);  // Award 10 PowerPoints for a successful shake
+        // Show a large pouring protein shake animation for success:
+        showShakeSuccess();
+        addPoints(10);
       }
     }
 
@@ -314,32 +320,47 @@
       }, shakeListeningTime);
     }
 
+    // Show a large, eye-catching pouring protein shake success animation.
+    function showShakeSuccess() {
+      const shakeDiv = document.createElement('div');
+      shakeDiv.innerHTML = "<div style='font-size:4rem; text-align:center; padding:20px;'>🥤<br>Protein Shake Power!</div>";
+      shakeDiv.style.position = 'absolute';
+      shakeDiv.style.top = '25%';
+      shakeDiv.style.left = '0';
+      shakeDiv.style.width = '100%';
+      shakeDiv.style.height = '50%';
+      shakeDiv.style.backgroundColor = 'rgba(0, 0, 0, 0.9)';
+      shakeDiv.style.color = '#FFD700';
+      shakeDiv.style.zIndex = '100';
+      document.body.appendChild(shakeDiv);
+      setTimeout(() => {
+        shakeDiv.remove();
+      }, 3000);
+    }
+
     shakeButton.addEventListener('click', startShakeTest);
 
     /* 2. Tilt Test */
     const tiltButton = document.getElementById('tiltButton');
-    let tiltTriggered = false;
-    const tiltThreshold = -30;  // beta angle (degrees): tilt forward
-    const returnThreshold = 10; // near upright
-
+    let tiltBaseline = null;
+    // For tilt, we trigger when the beta angle changes by 90° from the starting (baseline) value.
     function handleTilt(event) {
-      const beta = event.beta; // front-to-back tilt in degrees
-      if (beta < tiltThreshold && !tiltTriggered) {
-        tiltTriggered = true;
-        messageDiv.textContent = "Tilt detected! Now return upright like a well-balanced squat.";
-      }
-      if (tiltTriggered && Math.abs(beta) < returnThreshold) {
-        createBubbles(15);
-        // Gym-themed success message for tilt
-        messageDiv.textContent = "Perfect balance! Your tilt shows you're in impeccable form!";
-        addPoints(15);  // Award 15 PowerPoints for a successful tilt
+      const currentBeta = event.beta !== null ? formatValue(event.beta) : 0;
+      if (tiltBaseline === null) {
+        tiltBaseline = currentBeta;
+        messageDiv.textContent = "Tilt: Start tilting – change your angle by 90°!";
+      } else if (Math.abs(currentBeta - tiltBaseline) >= 90) {
+        createBubbles(15, 1.5); // Show big balloons.
+        messageDiv.textContent = "Boom! You tilted like a champion – gym gains unlocked!";
+        addPoints(15);
         window.removeEventListener('deviceorientation', handleTilt);
-        tiltTriggered = false;
+        tiltBaseline = null;
       }
     }
 
     function startTiltTest() {
-      messageDiv.textContent = "Tilt: Lean forward like you're about to bench press, then stand tall!";
+      tiltBaseline = null;
+      messageDiv.textContent = "Tilt: Tilt your phone so your beta angle changes by 90°!";
       window.addEventListener('deviceorientation', handleTilt);
     }
 
@@ -357,10 +378,9 @@
       touchEndY = e.changedTouches[0].screenY;
       const deltaY = touchStartY - touchEndY;
       if (deltaY > 50) {
-        createBubbles(15);
-        // Gym-themed success message for swipe
+        showSwipeSuccess();
         messageDiv.textContent = "Speedy swipe! That move is as quick as a sprint on the treadmill!";
-        addPoints(20);  // Award 20 PowerPoints for a successful swipe
+        addPoints(20);
       } else {
         messageDiv.textContent = 'Swipe too short. Push harder!';
       }
@@ -369,7 +389,7 @@
     }
 
     function startSwipeTest() {
-      messageDiv.textContent = "Swipe: Swipe up like you're running up the stairs for a cardio boost!";
+      messageDiv.textContent = "Swipe: Swipe up like you're running up stairs for a cardio boost!";
       arrowDiv.style.display = 'block';
       arrowDiv.classList.add('animate-arrow');
       arrowDiv.addEventListener('animationend', () => {
@@ -377,6 +397,30 @@
       }, {once: true});
       document.addEventListener('touchstart', handleTouchStart);
       document.addEventListener('touchend', handleTouchEnd);
+    }
+
+    // Show a set of large blue arrows running from bottom to top.
+    function showSwipeSuccess() {
+      const arrowCount = 5;
+      for (let i = 0; i < arrowCount; i++) {
+        const arrow = document.createElement('div');
+        arrow.textContent = "⬆️";
+        arrow.style.position = 'absolute';
+        arrow.style.left = (10 + i * 20) + '%';
+        arrow.style.bottom = '-100px';
+        arrow.style.fontSize = '5rem';
+        arrow.style.color = '#0091EA';
+        arrow.style.opacity = 1;
+        arrow.style.transition = 'all 2s ease-out';
+        document.body.appendChild(arrow);
+        setTimeout(() => {
+          arrow.style.bottom = '110%';
+          arrow.style.opacity = 0;
+        }, 100);
+        arrow.addEventListener('transitionend', () => {
+          arrow.remove();
+        });
+      }
     }
 
     swipeButton.addEventListener('click', startSwipeTest);
@@ -392,12 +436,14 @@
       document.removeEventListener('touchend', handleTouchEnd);
     });
 
-    /* --- Helper: Bubble Animation (used for success feedback) --- */
-    function createBubbles(count = 10) {
+    /* --- Helper: Bubble Animation (used for tilt success) --- */
+    // Accepts a scale factor to make the balloons bigger.
+    function createBubbles(count = 10, scale = 1) {
       for (let i = 0; i < count; i++) {
         const bubble = document.createElement('div');
         bubble.classList.add('bubble');
-        const size = Math.random() * 30 + 20; // random size between 20 and 50px
+        const baseSize = Math.random() * 30 + 20; // random size between 20 and 50px
+        const size = baseSize * scale;
         bubble.style.width = `${size}px`;
         bubble.style.height = `${size}px`;
         bubble.style.left = Math.random() * (window.innerWidth - size) + 'px';
