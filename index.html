@@ -53,6 +53,7 @@
     #sensorReadings {
       font-size: 0.9rem;
       margin-bottom: 10px;
+      line-height: 1.4;
     }
     #message {
       font-size: 1.3rem;
@@ -63,7 +64,7 @@
       color: #FFD700; /* Gold for PowerPoints */
       margin-bottom: 10px;
     }
-    /* Buttons container remains fixed at the bottom */
+    /* Buttons container fixed at the bottom */
     .buttons {
       position: absolute;
       bottom: 10px;
@@ -142,7 +143,7 @@
 
   <!-- Center container for sensor readings, messages, and points counter -->
   <div id="centerDisplay">
-    <div id="sensorReadings"></div>
+    <div id="sensorReadings">Waiting for sensor data...</div>
     <div id="message"></div>
     <div id="pointsCounter">PowerPoints: 0</div>
   </div>
@@ -183,11 +184,10 @@
     function updatePointsCounter() {
       pointsCounterDiv.textContent = 'PowerPoints: ' + totalPoints;
     }
-    // Call this function each time a gesture is successfully completed
+    // Award points and animate a floating reward
     function addPoints(pts) {
       totalPoints += pts;
       updatePointsCounter();
-      // Animate the points reward (a floating "+pts" pop-up)
       const ptsBubble = document.createElement('div');
       ptsBubble.textContent = '+' + pts;
       ptsBubble.style.position = 'absolute';
@@ -209,17 +209,17 @@
       });
     }
 
-    // Handler for devicemotion events to update sensor data (rounded to no decimal places)
+    // Handler for devicemotion events – group and label as "Strength Metrics"
     function sensorDataUpdate(event) {
       let accIG = event.accelerationIncludingGravity;
       let acc = event.acceleration;
       let rotation = event.rotationRate;
-      devicemotionText = 'DeviceMotion: ';
+      devicemotionText = "<strong>Strength Metrics:</strong><br>";
       if (accIG) {
-        devicemotionText += `Acc IG: x=${accIG.x !== null ? accIG.x.toFixed(0) : '0'}, y=${accIG.y !== null ? accIG.y.toFixed(0) : '0'}, z=${accIG.z !== null ? accIG.z.toFixed(0) : '0'}. `;
+        devicemotionText += `Acc IG: x=${accIG.x !== null ? accIG.x.toFixed(0) : '0'}, y=${accIG.y !== null ? accIG.y.toFixed(0) : '0'}, z=${accIG.z !== null ? accIG.z.toFixed(0) : '0'}.<br>`;
       }
       if (acc) {
-        devicemotionText += `Acc: x=${acc.x !== null ? acc.x.toFixed(0) : '0'}, y=${acc.y !== null ? acc.y.toFixed(0) : '0'}, z=${acc.z !== null ? acc.z.toFixed(0) : '0'}. `;
+        devicemotionText += `Acc: x=${acc.x !== null ? acc.x.toFixed(0) : '0'}, y=${acc.y !== null ? acc.y.toFixed(0) : '0'}, z=${acc.z !== null ? acc.z.toFixed(0) : '0'}.<br>`;
       }
       if (rotation) {
         devicemotionText += `Rotation: alpha=${rotation.alpha !== null ? rotation.alpha.toFixed(0) : '0'}, beta=${rotation.beta !== null ? rotation.beta.toFixed(0) : '0'}, gamma=${rotation.gamma !== null ? rotation.gamma.toFixed(0) : '0'}.`;
@@ -227,9 +227,12 @@
       updateSensorReadings();
     }
 
-    // Handler for deviceorientation events to update sensor data (rounded to no decimals)
+    // Handler for deviceorientation events – group and label as "Form & Balance"
     function sensorOrientationUpdate(event) {
-      deviceOrientationText = `Orientation: alpha=${event.alpha !== null ? event.alpha.toFixed(0) : '0'}, beta=${event.beta !== null ? event.beta.toFixed(0) : '0'}, gamma=${event.gamma !== null ? event.gamma.toFixed(0) : '0'}.`;
+      deviceOrientationText = "<strong>Form &amp; Balance:</strong><br>";
+      deviceOrientationText += `Alpha=${event.alpha !== null ? event.alpha.toFixed(0) : '0'}, `;
+      deviceOrientationText += `Beta=${event.beta !== null ? event.beta.toFixed(0) : '0'}, `;
+      deviceOrientationText += `Gamma=${event.gamma !== null ? event.gamma.toFixed(0) : '0'}.`;
       updateSensorReadings();
     }
 
@@ -240,14 +243,14 @@
     let shakeDetected = false;
     let shakeMotionListener = null;
     let shakeTimeout = null;
-    // New threshold for shake detection (using acceleration, not deviation from gravity)
+    // New threshold for shake detection (using acceleration)
     const shakeAccelerationThreshold = 12; // m/s²
     const shakeListeningTime = 10000; // 10 seconds
 
     function handleShakeMotion(event) {
       let acc = event.acceleration;
       if (!acc || (acc.x === null && acc.y === null && acc.z === null)) {
-        // Fallback to accelerationIncludingGravity if 'acceleration' is not available
+        // Fallback to accelerationIncludingGravity if needed
         acc = event.accelerationIncludingGravity;
       }
       const x = acc.x || 0;
@@ -259,7 +262,8 @@
         if (shakeTimeout) clearTimeout(shakeTimeout);
         stopShakeListening();
         createBubbles(15);
-        messageDiv.textContent = 'Congrats, shake detected!';
+        // Creative, gym-themed success message for shake
+        messageDiv.textContent = "Boom! You just rocked the gym floor – that shake is a power move!";
         addPoints(10);  // Award 10 PowerPoints for a successful shake
       }
     }
@@ -277,14 +281,12 @@
 
     function startShakeTest() {
       shakeDetected = false;
-      messageDiv.textContent = 'Shake: Please shake your phone...';
-      // Add sensor event listeners once (if not already added)
+      messageDiv.textContent = "Shake: Shake your phone like you're lifting heavy weights!";
       if (!sensorListenersAdded) {
         window.addEventListener('devicemotion', sensorDataUpdate);
         window.addEventListener('deviceorientation', sensorOrientationUpdate);
         sensorListenersAdded = true;
       }
-      // Start shake test listeners
       if (typeof DeviceMotionEvent !== 'undefined' &&
           typeof DeviceMotionEvent.requestPermission === 'function') {
         DeviceMotionEvent.requestPermission()
@@ -307,7 +309,7 @@
       shakeTimeout = setTimeout(() => {
         stopShakeListening();
         if (!shakeDetected) {
-          messageDiv.textContent = 'No shaking detected. Try again!';
+          messageDiv.textContent = 'No power shake detected. Try again!';
         }
       }, shakeListeningTime);
     }
@@ -324,11 +326,12 @@
       const beta = event.beta; // front-to-back tilt in degrees
       if (beta < tiltThreshold && !tiltTriggered) {
         tiltTriggered = true;
-        messageDiv.textContent = 'Tilt detected! Now return to upright...';
+        messageDiv.textContent = "Tilt detected! Now return upright like a well-balanced squat.";
       }
       if (tiltTriggered && Math.abs(beta) < returnThreshold) {
         createBubbles(15);
-        messageDiv.textContent = 'Congrats, tilt detected!';
+        // Gym-themed success message for tilt
+        messageDiv.textContent = "Perfect balance! Your tilt shows you're in impeccable form!";
         addPoints(15);  // Award 15 PowerPoints for a successful tilt
         window.removeEventListener('deviceorientation', handleTilt);
         tiltTriggered = false;
@@ -336,7 +339,7 @@
     }
 
     function startTiltTest() {
-      messageDiv.textContent = 'Tilt: Tilt your phone forward and then return upright.';
+      messageDiv.textContent = "Tilt: Lean forward like you're about to bench press, then stand tall!";
       window.addEventListener('deviceorientation', handleTilt);
     }
 
@@ -355,18 +358,18 @@
       const deltaY = touchStartY - touchEndY;
       if (deltaY > 50) {
         createBubbles(15);
-        messageDiv.textContent = 'Congrats, swipe detected!';
+        // Gym-themed success message for swipe
+        messageDiv.textContent = "Speedy swipe! That move is as quick as a sprint on the treadmill!";
         addPoints(20);  // Award 20 PowerPoints for a successful swipe
       } else {
-        messageDiv.textContent = 'Swipe too short. Try again!';
+        messageDiv.textContent = 'Swipe too short. Push harder!';
       }
       document.removeEventListener('touchstart', handleTouchStart);
       document.removeEventListener('touchend', handleTouchEnd);
     }
 
     function startSwipeTest() {
-      messageDiv.textContent = 'Swipe: Swipe up on the screen.';
-      // Show the arrow prompt immediately
+      messageDiv.textContent = "Swipe: Swipe up like you're running up the stairs for a cardio boost!";
       arrowDiv.style.display = 'block';
       arrowDiv.classList.add('animate-arrow');
       arrowDiv.addEventListener('animationend', () => {
@@ -381,7 +384,7 @@
     /* 4. Reset Button */
     const resetButton = document.getElementById('resetButton');
     resetButton.addEventListener('click', () => {
-      messageDiv.textContent = '';
+      messageDiv.textContent = "Ready for the next round of gym action!";
       arrowDiv.style.display = 'none';
       stopShakeListening();
       window.removeEventListener('deviceorientation', handleTilt);
