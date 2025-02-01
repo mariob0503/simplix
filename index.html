@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Lift and Earn - Dumbbell Lift</title>
+  <title>Lift and Earn</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     /* Basic reset and styling */
@@ -61,8 +61,7 @@
 </head>
 <body>
   <div class="container">
-    <!-- Button text updated to "v1" -->
-    <button id="liftEarnButton">v1</button>
+    <button id="liftEarnButton">lift and earn</button>
     <div id="message"></div>
   </div>
 
@@ -70,19 +69,9 @@
     // Get references to DOM elements
     const liftEarnButton = document.getElementById('liftEarnButton');
     const messageDiv = document.getElementById('message');
-
-    // Variables for integration of acceleration to displacement
-    let lastTime = null;
-    let velocity = 0;           // in m/s
-    let displacement = 0;       // in meters (vertical displacement)
-    let maxDisplacement = 0;    // peak displacement reached during the lift
-    let gestureComplete = false;
+    let shakeDetected = false;
     let motionListener = null;
-
-    // Configuration and thresholds
-    const displacementThreshold = 0.20; // 20 cm upward
-    const returnThreshold = 0.05;       // close to starting position
-    const integrationTimeLimit = 4000;  // listen for 4 seconds maximum
+    const shakeThreshold = 3; // Threshold for deviation from gravity in m/s²
 
     // Helper function to create bubbles on the screen
     function createBubbles(count = 10) {
@@ -93,30 +82,40 @@
         const size = Math.random() * 30 + 20;
         bubble.style.width = `${size}px`;
         bubble.style.height = `${size}px`;
-        // Random horizontal position
+        // Random position on the horizontal axis within the viewport
         bubble.style.left = Math.random() * (window.innerWidth - size) + 'px';
         // Start at the bottom of the viewport
         bubble.style.top = window.innerHeight - size + 'px';
-        // Random animation delay for variety
+        // Random delay for animation effect
         bubble.style.animationDelay = Math.random() * 0.5 + 's';
         document.body.appendChild(bubble);
-        // Remove bubble after animation ends
+        // Remove bubble from DOM after animation ends
         bubble.addEventListener('animationend', () => {
           bubble.remove();
         });
       }
     }
 
-    // Reset integration variables for a new gesture attempt
-    function resetIntegration() {
-      lastTime = null;
-      velocity = 0;
-      displacement = 0;
-      maxDisplacement = 0;
-      gestureComplete = false;
+    // Function to handle the sensor events
+    function handleMotion(event) {
+      // Use acceleration including gravity (note: event.acceleration might be null on some devices)
+      const acc = event.accelerationIncludingGravity;
+      if (!acc) return;
+      
+      // Calculate the magnitude of acceleration vector
+      const x = acc.x || 0;
+      const y = acc.y || 0;
+      const z = acc.z || 0;
+      const magnitude = Math.sqrt(x * x + y * y + z * z);
+      
+      // The device at rest should measure around 9.8 m/s² due to gravity.
+      // We check if the deviation exceeds our threshold.
+      if (Math.abs(magnitude - 9.8) > shakeThreshold) {
+        shakeDetected = true;
+      }
     }
 
-    // Function to stop listening to motion events
+    // Function to stop listening to sensor events
     function stopMotionListening() {
       if (motionListener) {
         window.removeEventListener('devicemotion', motionListener);
@@ -124,26 +123,54 @@
       }
     }
 
-    // Function to process motion events and integrate acceleration
-    function handleMotion(event) {
-      // We'll try to use event.acceleration if available (net acceleration without gravity)
-      // Otherwise, you might need to remove gravity manually from accelerationIncludingGravity.
-      const accData = event.acceleration;
-      if (!accData) return; // if not available, we do nothing
-
-      // Assuming that the phone is held in portrait mode, we treat the 'y' axis as vertical.
-      // Depending on the device orientation, you may need to adjust this.
-      const ay = accData.y || 0;  // in m/s²
-
-      const currentTime = event.timeStamp;
-      if (!lastTime) {
-        lastTime = currentTime;
-        return;
+    // Function to request motion sensor access (required on iOS 13+)
+    function requestMotionPermission() {
+      if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
+        DeviceMotionEvent.requestPermission()
+          .then(response => {
+            if (response === 'granted') {
+              startMotionListening();
+            } else {
+              messageDiv.textContent = 'Permission not granted to access motion sensors.';
+            }
+          })
+          .catch(err => {
+            console.error(err);
+            messageDiv.textContent = 'Error requesting permission.';
+          });
+      } else {
+        // For browsers that do not require permission
+        startMotionListening();
       }
-      const dt = (currentTime - lastTime) / 1000; // convert ms to seconds
-      lastTime = currentTime;
+    }
 
-      // Update velocity and displacement using simple integration:
-      // v = v + a*dt; displacement = displacement + v*dt;
-      velocit
+    // Function to start listening to motion events for 1 second
+    function startMotionListening() {
+      shakeDetected = false;
+      motionListener = handleMotion;
+      window.addEventListener('devicemotion', motionListener);
+      
+      // Listen for one second, then evaluate if shaking occurred.
+      setTimeout(() => {
+        stopMotionListening();
+        if (shakeDetected) {
+          // Show bubbles and message
+          createBubbles(15);
+          messageDiv.textContent = 'Congrats, your training is logged!';
+        } else {
+          messageDiv.textContent = 'No shaking detected. Try again!';
+        }
+      }, 1000);
+    }
+
+    // Button click event handler
+    liftEarnButton.addEventListener('click', () => {
+      // Clear any previous messages
+      messageDiv.textContent = '';
+      // Request sensor access and then listen for shaking
+      requestMotionPermission();
+    });
+  </script>
+</body>
+</html>
 
