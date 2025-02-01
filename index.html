@@ -25,6 +25,9 @@
       font-size: 1.43rem; /* Previously 2.2rem */
       color: white; /* All white text */
       line-height: 1.3;
+      /* Lower the flag in the stacking order so it doesn't block buttons */
+      z-index: 1;
+      pointer-events: none;  /* Allow clicks to pass through if overlapping */
     }
     /* Big and bold styling for Lift&Learn (reduced by 35%) */
     .big-bold {
@@ -42,6 +45,8 @@
       left: 50%;
       transform: translateX(-50%);
       text-align: center;
+      /* Ensure this container is above the flag */
+      z-index: 10;
     }
     button {
       padding: 10px 20px;
@@ -89,6 +94,7 @@
       font-size: 3rem;
       opacity: 0;
       display: none;
+      z-index: 5;
     }
     .animate-arrow {
       animation: swipeArrow 1.5s ease-out forwards;
@@ -234,6 +240,72 @@
     /* =========================
        3. Swipe Test
        ========================= */
-    co
+    const swipeButton = document.getElementById('swipeButton');
+    let touchStartY = null;
+    let touchEndY = null;
 
-    
+    function handleTouchStart(e) {
+      touchStartY = e.changedTouches[0].screenY;
+    }
+    function handleTouchEnd(e) {
+      touchEndY = e.changedTouches[0].screenY;
+      const deltaY = touchStartY - touchEndY;
+      if (deltaY > 50) {
+        createBubbles(15);
+        messageDiv.textContent = 'Congrats, swipe detected!';
+      } else {
+        messageDiv.textContent = 'Swipe too short. Try again!';
+      }
+      document.removeEventListener('touchstart', handleTouchStart);
+      document.removeEventListener('touchend', handleTouchEnd);
+    }
+
+    function startSwipeTest() {
+      messageDiv.textContent = 'Swipe: Swipe up on the screen.';
+      // Show the arrow prompt immediately
+      arrowDiv.style.display = 'block';
+      arrowDiv.classList.add('animate-arrow');
+      arrowDiv.addEventListener('animationend', () => {
+        arrowDiv.classList.remove('animate-arrow');
+      }, {once: true});
+      document.addEventListener('touchstart', handleTouchStart);
+      document.addEventListener('touchend', handleTouchEnd);
+    }
+
+    swipeButton.addEventListener('click', startSwipeTest);
+
+    /* =========================
+       4. Reset Button
+       ========================= */
+    const resetButton = document.getElementById('resetButton');
+    resetButton.addEventListener('click', () => {
+      messageDiv.textContent = '';
+      arrowDiv.style.display = 'none';
+      stopShakeListening();
+      window.removeEventListener('deviceorientation', handleTilt);
+      document.removeEventListener('touchstart', handleTouchStart);
+      document.removeEventListener('touchend', handleTouchEnd);
+    });
+
+    /* =========================
+       Helper: Bubble Animation (used for success feedback)
+       ========================= */
+    function createBubbles(count = 10) {
+      for (let i = 0; i < count; i++) {
+        const bubble = document.createElement('div');
+        bubble.classList.add('bubble');
+        const size = Math.random() * 30 + 20; // random size between 20 and 50px
+        bubble.style.width = `${size}px`;
+        bubble.style.height = `${size}px`;
+        bubble.style.left = Math.random() * (window.innerWidth - size) + 'px';
+        bubble.style.top = window.innerHeight - size + 'px';
+        bubble.style.animationDelay = Math.random() * 0.5 + 's';
+        document.body.appendChild(bubble);
+        bubble.addEventListener('animationend', () => {
+          bubble.remove();
+        });
+      }
+    }
+  </script>
+</body>
+</html>
