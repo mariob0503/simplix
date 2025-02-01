@@ -32,13 +32,30 @@
     #message {
       font-size: 1.2rem;
       color: #333;
+      margin-bottom: 20px;
+    }
+
+    #startButton {
+      padding: 10px 20px;
+      font-size: 1rem;
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    #startButton:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
     }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>Shake Me!</h1>
-    <p id="message">Shake your phone to see if you reach the threshold.</p>
+    <p id="message">Click "Start" to enable shake detection.</p>
+    <button id="startButton">Start</button>
   </div>
   <script>
     // Threshold for shake detection (adjust as needed)
@@ -70,7 +87,7 @@
       if (deltaX + deltaY + deltaZ > SHAKE_THRESHOLD) {
         showMessage("Threshold reached! Great shake!");
       } else {
-        showMessage("Keep shaking...");
+        showMessage("Shake detection active...");
       }
 
       // Update last positions
@@ -85,12 +102,19 @@
       messageElement.textContent = text;
     }
 
-    // Add event listener for device motion
-    if (window.DeviceMotionEvent) {
-      window.addEventListener("devicemotion", handleMotion);
-    } else {
-      showMessage("Device motion not supported on this device.");
+    // Function to start shake detection
+    function startShakeDetection() {
+      if (window.DeviceMotionEvent) {
+        window.addEventListener("devicemotion", handleMotion);
+        showMessage("Shake detection active...");
+        document.getElementById("startButton").disabled = true;
+      } else {
+        showMessage("Device motion not supported on this device.");
+      }
     }
+
+    // Add event listener to the button
+    document.getElementById("startButton").addEventListener("click", startShakeDetection);
   </script>
 </body>
 </html>
