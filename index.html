@@ -27,7 +27,7 @@
       z-index: 10;
       pointer-events: none;
     }
-    /* Accent color classes (using the Simplix blue accent) */
+    /* Accent color classes */
     .blue { 
       color: #0091EA; 
     }
@@ -65,6 +65,22 @@
       color: #FFD700; /* Gold for PowerPoints */
       margin-bottom: 10px;
     }
+    /* Shake progress bar container */
+    #shakeProgressContainer {
+      width: 80%;
+      height: 20px;
+      background-color: #555;
+      margin: 0 auto;
+      border-radius: 10px;
+      overflow: hidden;
+      margin-top: 10px;
+    }
+    /* Shake progress bar fill */
+    #shakeProgress {
+      width: 0%;
+      height: 100%;
+      background-color: #FFD700;
+    }
     /* Buttons container fixed at the bottom */
     .buttons {
       position: absolute;
@@ -86,7 +102,7 @@
     button:active {
       transform: scale(0.98);
     }
-    /* (Optional) Big bubble style for tilt success; these were previously animated */
+    /* (Optional) Big bubble style for tilt success */
     .bubble {
       position: absolute;
       background: rgba(0, 145, 234, 0.7);
@@ -104,7 +120,7 @@
         opacity: 0;
       }
     }
-    /* Arrow styling and animation for swipe prompt (still used in the swipe handler) */
+    /* Arrow styling and animation for swipe prompt */
     #arrow {
       position: absolute;
       bottom: 140px;
@@ -127,6 +143,14 @@
         bottom: 90%;
         opacity: 0;
       }
+    }
+    /* CSS animation for shaking protein bottle */
+    @keyframes shake {
+      0% { transform: translate(0px, 0px) rotate(0deg); }
+      25% { transform: translate(2px, -2px) rotate(-5deg); }
+      50% { transform: translate(-2px, 2px) rotate(5deg); }
+      75% { transform: translate(2px, -2px) rotate(-5deg); }
+      100% { transform: translate(0px, 0px) rotate(0deg); }
     }
   </style>
 </head>
@@ -198,7 +222,7 @@
         pointsCounterDiv.textContent = 'PowerPoints: ' + totalPoints;
       }
     }
-    // Award points and (optionally) animate a floating reward.
+    // Award points.
     function addPoints(pts) {
       totalPoints += pts;
       updatePointsCounter();
@@ -232,7 +256,7 @@
     }
 
     /* --- Success Screen Display ---
-         When an activity is completed, update the centerDisplay
+         When an activity is complete, update the centerDisplay
          to show a persistent success message/image along with the current PowerPoints balance.
     */
     function showSuccessScreen(contentHTML) {
@@ -240,19 +264,29 @@
         '<div style="font-size:1.5rem; color:#FFD700; margin-top:10px;">PowerPoints: ' + totalPoints + '</div>';
     }
 
-    // Shake success: Large pouring protein shake image/message.
+    // Shake success: Show a shaking Protein Bottle for three seconds.
     function showShakeSuccessScreen() {
-      const contentHTML = "<div style='font-size:4rem; text-align:center; padding:20px;'>🥤<br>Protein Shake Power!</div>";
+      const contentHTML = "<h1 style='font-size:3rem; margin-bottom:20px;'>PowerPoints taken!</h1>" +
+        "<div id='shakeAnimation' style='font-size:4rem; text-align:center; padding:20px;'>🥤</div>";
       showSuccessScreen(contentHTML);
+      const shakeElement = document.getElementById('shakeAnimation');
+      // Apply the shaking animation to simulate a protein bottle being shaken.
+      shakeElement.style.animation = "shake 0.5s infinite";
+      // Remove the animation after 3 seconds.
+      setTimeout(() => {
+        shakeElement.style.animation = "";
+      }, 3000);
     }
     // Tilt success: Big balloons.
     function showTiltSuccessScreen() {
-      const contentHTML = "<div style='font-size:4rem; text-align:center; padding:20px;'>🎈🎈🎈<br>Tilt Mastery Achieved!</div>";
+      const contentHTML = "<h1 style='font-size:3rem; margin-bottom:20px;'>PowerPoints taken!</h1>" +
+        "<div style='font-size:4rem; text-align:center; padding:20px;'>🎈🎈🎈<br>Tilt Mastery Achieved!</div>";
       showSuccessScreen(contentHTML);
     }
     // Swipe success: Big blue arrows.
     function showSwipeSuccessScreen() {
-      const contentHTML = "<div style='font-size:4rem; text-align:center; padding:20px;'>⬆️⬆️⬆️<br>Speedy Swipe Success!</div>";
+      const contentHTML = "<h1 style='font-size:3rem; margin-bottom:20px;'>PowerPoints taken!</h1>" +
+        "<div style='font-size:4rem; text-align:center; padding:20px;'>⬆️⬆️⬆️<br>Speedy Swipe Success!</div>";
       showSuccessScreen(contentHTML);
     }
 
@@ -263,8 +297,10 @@
     let shakeDetected = false;
     let shakeMotionListener = null;
     let shakeTimeout = null;
+    let shakeStartTime = null; // For tracking continuous shaking time
     const shakeAccelerationThreshold = 12; // m/s²
     const shakeListeningTime = 10000; // 10 seconds
+    const requiredShakeDuration = 3000; // 3 seconds (3000ms)
 
     function handleShakeMotion(event) {
       let acc = event.acceleration;
@@ -275,14 +311,36 @@
       const y = acc.y !== null ? formatValue(acc.y) : 0;
       const z = acc.z !== null ? formatValue(acc.z) : 0;
       const magnitude = Math.sqrt(x * x + y * y + z * z);
-      if (magnitude > shakeAccelerationThreshold && !shakeDetected) {
-        shakeDetected = true;
-        if (shakeTimeout) clearTimeout(shakeTimeout);
-        stopShakeListening();
-        addPoints(10);  // Award 10 PowerPoints
-        showShakeSuccessScreen();
+      if (magnitude > shakeAccelerationThreshold) {
+        // Start (or continue) counting the shaking duration.
+        if (shakeStartTime === null) {
+          shakeStartTime = Date.now();
+        }
+        let elapsed = Date.now() - shakeStartTime;
+        // Update progress bar (if exists).
+        let progressElem = document.getElementById('shakeProgress');
+        if (progressElem) {
+          let percent = Math.min(100, (elapsed / requiredShakeDuration) * 100);
+          progressElem.style.width = percent + '%';
+        }
+        // If shaking has been sustained for 3 seconds, trigger success.
+        if (elapsed >= requiredShakeDuration && !shakeDetected) {
+          shakeDetected = true;
+          if (shakeTimeout) clearTimeout(shakeTimeout);
+          stopShakeListening();
+          addPoints(10);
+          showShakeSuccessScreen();
+        }
+      } else {
+        // If the acceleration falls below threshold, reset the timer and progress bar.
+        shakeStartTime = null;
+        let progressElem = document.getElementById('shakeProgress');
+        if (progressElem) {
+          progressElem.style.width = '0%';
+        }
       }
     }
+
     function stopShakeListening() {
       if (shakeMotionListener) {
         window.removeEventListener('devicemotion', shakeMotionListener);
@@ -293,11 +351,22 @@
         shakeTimeout = null;
       }
     }
+
     function startShakeTest() {
       shakeDetected = false;
-      // While activity is running, the center display shows sensor readings
-      // (which are updated via sensorDataUpdate and sensorOrientationUpdate)
-      messageDiv.textContent = "Shake: Shake your phone like you're lifting heavy weights!";
+      shakeStartTime = null;
+      // Update the center display to include a progress bar.
+      centerDisplay.innerHTML = 
+        '<div id="sensorReadings">Waiting for sensor data...</div>' +
+        '<div id="message">Shake: Shake your phone like you’re lifting heavy weights!</div>' +
+        '<div id="pointsCounter">PowerPoints: ' + totalPoints + '</div>' +
+        '<div id="shakeProgressContainer">' +
+          '<div id="shakeProgress"></div>' +
+        '</div>';
+      sensorReadingsDiv = document.getElementById('sensorReadings');
+      messageDiv = document.getElementById('message');
+      pointsCounterDiv = document.getElementById('pointsCounter');
+      // Add sensor listeners if not already added.
       if (!sensorListenersAdded) {
         window.addEventListener('devicemotion', sensorDataUpdate);
         window.addEventListener('deviceorientation', sensorOrientationUpdate);
@@ -322,10 +391,16 @@
         shakeMotionListener = handleShakeMotion;
         window.addEventListener('devicemotion', shakeMotionListener);
       }
+      // Set a timeout to end the shake test after a fixed period.
       shakeTimeout = setTimeout(() => {
         stopShakeListening();
         if (!shakeDetected) {
-          messageDiv.textContent = 'No power shake detected. Try again!';
+          // If shaking was initiated but did not reach 3 seconds, show "Shake harder!".
+          if (shakeStartTime !== null && (Date.now() - shakeStartTime < requiredShakeDuration)) {
+            messageDiv.textContent = 'Shake harder!';
+          } else {
+            messageDiv.textContent = 'No power shake detected. Try again!';
+          }
         }
       }, shakeListeningTime);
     }
@@ -341,7 +416,7 @@
         tiltBaseline = currentBeta;
         messageDiv.textContent = "Tilt: Start tilting – change your angle by 90°!";
       } else if (Math.abs(currentBeta - tiltBaseline) >= 90) {
-        addPoints(15);  // Award 15 PowerPoints
+        addPoints(15);
         showTiltSuccessScreen();
         window.removeEventListener('deviceorientation', handleTilt);
         tiltBaseline = null;
@@ -365,7 +440,7 @@
       touchEndY = e.changedTouches[0].screenY;
       const deltaY = touchStartY - touchEndY;
       if (deltaY > 50) {
-        addPoints(20);  // Award 20 PowerPoints
+        addPoints(20);
         showSwipeSuccessScreen();
       } else {
         messageDiv.textContent = 'Swipe too short. Push harder!';
@@ -393,7 +468,7 @@
         '<div id="sensorReadings">Waiting for sensor data...</div>' +
         '<div id="message"></div>' +
         '<div id="pointsCounter">PowerPoints: ' + totalPoints + '</div>';
-      // Reassign the elements
+      // Reassign the elements.
       sensorReadingsDiv = document.getElementById('sensorReadings');
       messageDiv = document.getElementById('message');
       pointsCounterDiv = document.getElementById('pointsCounter');
