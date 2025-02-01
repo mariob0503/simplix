@@ -61,18 +61,26 @@
 </head>
 <body>
   <div class="container">
-    <button id="liftEarnButton">lift and earn</button>
+    <button id="liftEarnButton">start lift and learn</button>
     <div id="message"></div>
   </div>
 
   <script>
-    // Get references to DOM elements
+    // DOM references
     const liftEarnButton = document.getElementById('liftEarnButton');
     const messageDiv = document.getElementById('message');
-    let shakeDetected = false;
-    let motionListener = null;
-    const shakeThreshold = 3; // Threshold for deviation from gravity in m/s²
 
+    // Shake detection configuration
+    const shakeThreshold = 1.5;       // Lower threshold for a "mild" shake (m/s² deviation)
+    const requiredShakeDuration = 3000; // Required continuous shake time (in ms)
+    const listeningTimeLimit = 10000;   // Total time allowed to perform the gesture (in ms)
+    
+    let shakeStartTime = null;
+    let shakingActive = false;
+    let gestureComplete = false;
+    let motionListener = null;
+    let listeningTimeout = null;
+    
     // Helper function to create bubbles on the screen
     function createBubbles(count = 10) {
       for (let i = 0; i < count; i++) {
@@ -82,48 +90,73 @@
         const size = Math.random() * 30 + 20;
         bubble.style.width = `${size}px`;
         bubble.style.height = `${size}px`;
-        // Random position on the horizontal axis within the viewport
+        // Random horizontal position within the viewport
         bubble.style.left = Math.random() * (window.innerWidth - size) + 'px';
         // Start at the bottom of the viewport
         bubble.style.top = window.innerHeight - size + 'px';
-        // Random delay for animation effect
+        // Random animation delay for variety
         bubble.style.animationDelay = Math.random() * 0.5 + 's';
         document.body.appendChild(bubble);
-        // Remove bubble from DOM after animation ends
-        bubble.addEventListener('animationend', () => {
-          bubble.remove();
-        });
+        // Remove bubble from DOM after animation completes
+        bubble.addEventListener('animationend', () => bubble.remove());
       }
     }
-
-    // Function to handle the sensor events
-    function handleMotion(event) {
-      // Use acceleration including gravity (note: event.acceleration might be null on some devices)
-      const acc = event.accelerationIncludingGravity;
-      if (!acc) return;
-      
-      // Calculate the magnitude of acceleration vector
-      const x = acc.x || 0;
-      const y = acc.y || 0;
-      const z = acc.z || 0;
-      const magnitude = Math.sqrt(x * x + y * y + z * z);
-      
-      // The device at rest should measure around 9.8 m/s² due to gravity.
-      // We check if the deviation exceeds our threshold.
-      if (Math.abs(magnitude - 9.8) > shakeThreshold) {
-        shakeDetected = true;
-      }
-    }
-
-    // Function to stop listening to sensor events
+    
+    // Stop listening to motion events and clear any timers
     function stopMotionListening() {
       if (motionListener) {
         window.removeEventListener('devicemotion', motionListener);
         motionListener = null;
       }
+      if (listeningTimeout) {
+        clearTimeout(listeningTimeout);
+        listeningTimeout = null;
+      }
     }
-
-    // Function to request motion sensor access (required on iOS 13+)
+    
+    // Handle device motion events for a sustained mild shake
+    function handleMotion(event) {
+      // Use acceleration including gravity
+      const acc = event.accelerationIncludingGravity;
+      if (!acc) return;
+      
+      // Calculate the magnitude of the acceleration vector
+      const x = acc.x || 0;
+      const y = acc.y || 0;
+      const z = acc.z || 0;
+      const magnitude = Math.sqrt(x * x + y * y + z * z);
+      
+      // A phone at rest measures roughly 9.8 m/s² (gravity).  
+      // We check if the deviation is above our shakeThreshold.
+      if (Math.abs(magnitude - 9.8) > shakeThreshold) {
+        // If shaking just started, record the time
+        if (!shakingActive) {
+          shakingActive = true;
+          shakeStartTime = performance.now();
+        } else {
+          // If shaking has been active, check its duration
+          const currentDuration = performance.now() - shakeStartTime;
+          if (currentDuration >= requiredShakeDuration) {
+            gestureComplete = true;
+            stopMotionListening();
+            triggerTrainingLogged();
+          }
+        }
+      } else {
+        // If acceleration is below threshold, reset the continuous shake timer
+        shakingActive = false;
+        shakeStartTime = null;
+      }
+    }
+    
+    // Trigger the "training logged" feedback (bubbles and message)
+    function triggerTrainingLogged() {
+      createBubbles(15);
+      messageDiv.textContent = 'Congrats, your training is logged!';
+      liftEarnButton.textContent = 'start lift and learn';
+    }
+    
+    // Request motion sensor access (for iOS 13+)
     function requestMotionPermission() {
       if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
         DeviceMotionEvent.requestPermission()
@@ -136,38 +169,39 @@
           })
           .catch(err => {
             console.error(err);
-            messageDiv.textContent = 'Error requesting permission.';
+            messageDiv.textContent = 'Error requesting motion sensor permission.';
           });
       } else {
-        // For browsers that do not require permission
+        // For browsers that don't require explicit permission
         startMotionListening();
       }
     }
-
-    // Function to start listening to motion events for 10 seconds
+    
+    // Start listening for motion events and allow up to listeningTimeLimit for the gesture
     function startMotionListening() {
-      shakeDetected = false;
+      // Reset gesture tracking variables
+      shakingActive = false;
+      shakeStartTime = null;
+      gestureComplete = false;
+      
       motionListener = handleMotion;
       window.addEventListener('devicemotion', motionListener);
       
-      // Listen for 10 seconds, then evaluate if shaking occurred.
-      setTimeout(() => {
+      listeningTimeout = setTimeout(() => {
         stopMotionListening();
-        if (shakeDetected) {
-          // Show bubbles and message
-          createBubbles(15);
-          messageDiv.textContent = 'Congrats, your training is logged!';
-        } else {
+        if (!gestureComplete) {
           messageDiv.textContent = 'No shaking detected. Try again!';
+          liftEarnButton.textContent = 'start lift and learn';
         }
-      }, 10000); // 10,000 milliseconds = 10 seconds
+      }, listeningTimeLimit);
     }
-
-    // Button click event handler
+    
+    // Button click handler
     liftEarnButton.addEventListener('click', () => {
-      // Clear any previous messages
-      messageDiv.textContent = '';
-      // Request sensor access and then listen for shaking
+      // Change button text and update instructions
+      liftEarnButton.textContent = 'go lift';
+      messageDiv.textContent = 'Gently shake your phone for at least 3 seconds...';
+      // Request motion sensor access and start listening for the gesture
       requestMotionPermission();
     });
   </script>
