@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shake Detection App</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #f0f0f0;
+      font-family: Arial, sans-serif;
+    }
+
+    .container {
+      text-align: center;
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 20px;
+    }
+
+    #message {
+      font-size: 1.2rem;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Shake Me!</h1>
+    <p id="message">Shake your phone to see if you reach the threshold.</p>
+  </div>
+  <script>
+    // Threshold for shake detection (adjust as needed)
+    const SHAKE_THRESHOLD = 15;
+
+    // Variables to track shake intensity
+    let lastX = null;
+    let lastY = null;
+    let lastZ = null;
+
+    // Function to handle device motion
+    function handleMotion(event) {
+      const { x, y, z } = event.accelerationIncludingGravity;
+
+      if (lastX === null || lastY === null || lastZ === null) {
+        // Initialize the last positions
+        lastX = x;
+        lastY = y;
+        lastZ = z;
+        return;
+      }
+
+      // Calculate the difference between current and last positions
+      const deltaX = Math.abs(x - lastX);
+      const deltaY = Math.abs(y - lastY);
+      const deltaZ = Math.abs(z - lastZ);
+
+      // Check if the shake intensity exceeds the threshold
+      if (deltaX + deltaY + deltaZ > SHAKE_THRESHOLD) {
+        showMessage("Threshold reached! Great shake!");
+      } else {
+        showMessage("Keep shaking...");
+      }
+
+      // Update last positions
+      lastX = x;
+      lastY = y;
+      lastZ = z;
+    }
+
+    // Function to update the message
+    function showMessage(text) {
+      const messageElement = document.getElementById("message");
+      messageElement.textContent = text;
+    }
+
+    // Add event listener for device motion
+    if (window.DeviceMotionEvent) {
+      window.addEventListener("devicemotion", handleMotion);
+    } else {
+      showMessage("Device motion not supported on this device.");
+    }
+  </script>
+</body>
+</html>
