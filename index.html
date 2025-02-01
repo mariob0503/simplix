@@ -144,13 +144,13 @@
       }
     }
 
-    // Function to start listening to motion events for 1 second
+    // Function to start listening to motion events for 10 seconds
     function startMotionListening() {
       shakeDetected = false;
       motionListener = handleMotion;
       window.addEventListener('devicemotion', motionListener);
       
-      // Listen for one second, then evaluate if shaking occurred.
+      // Listen for 10 seconds, then evaluate if shaking occurred.
       setTimeout(() => {
         stopMotionListening();
         if (shakeDetected) {
@@ -160,7 +160,7 @@
         } else {
           messageDiv.textContent = 'No shaking detected. Try again!';
         }
-      }, 1000);
+      }, 10000); // 10,000 milliseconds = 10 seconds
     }
 
     // Button click event handler
@@ -173,4 +173,3 @@
   </script>
 </body>
 </html>
-
