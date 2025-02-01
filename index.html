@@ -40,17 +40,17 @@
       font-size: 2.86rem;
       font-weight: bold;
     }
-    /* Center container for sensor readings, messages, and points counter */
+    /* Center container for sensor readings / success screens */
     #centerDisplay {
       position: absolute;
-      top: 60%; /* Moved down to avoid overlapping with the flag */
+      top: 60%; /* Moved down so it doesn’t overlap the flag */
       left: 50%;
       transform: translate(-50%, -50%);
       text-align: center;
       z-index: 20;
       width: 90%;
     }
-    /* Styling for sensor readings, messages, and points counter */
+    /* Default display inside the center area */
     #sensorReadings {
       font-size: 1rem;
       margin-bottom: 10px;
@@ -86,10 +86,10 @@
     button:active {
       transform: scale(0.98);
     }
-    /* Bubble (balloon) styles for tilt success feedback */
+    /* (Optional) Big bubble style for tilt success; these were previously animated */
     .bubble {
       position: absolute;
-      background: rgba(0, 145, 234, 0.7);  /* Accent blue with transparency */
+      background: rgba(0, 145, 234, 0.7);
       border-radius: 50%;
       opacity: 0;
       animation: rise 2s ease-out forwards;
@@ -104,7 +104,7 @@
         opacity: 0;
       }
     }
-    /* Arrow styling and animation for swipe prompt */
+    /* Arrow styling and animation for swipe prompt (still used in the swipe handler) */
     #arrow {
       position: absolute;
       bottom: 140px;
@@ -142,7 +142,7 @@
     <div>and get great discounts on Supplements</div>
   </div>
 
-  <!-- Center container for sensor readings, messages, and points counter -->
+  <!-- Center container (initially shows sensor readings) -->
   <div id="centerDisplay">
     <div id="sensorReadings">Waiting for sensor data...</div>
     <div id="message"></div>
@@ -151,19 +151,21 @@
 
   <!-- Buttons container fixed at the bottom -->
   <div class="buttons">
-    <button id="shakeButton">Test Shake</button>
-    <button id="tiltButton">Test Tilt</button>
-    <button id="swipeButton">Test Swipe</button>
+    <button id="shakeButton">Shake</button>
+    <button id="tiltButton">Tilt</button>
+    <button id="swipeButton">Swipe</button>
     <button id="resetButton">Reset</button>
   </div>
 
-  <!-- Arrow element for swipe test prompt -->
+  <!-- Arrow element for swipe prompt -->
   <div id="arrow">⬆️</div>
 
   <script>
-    const sensorReadingsDiv = document.getElementById('sensorReadings');
-    const messageDiv = document.getElementById('message');
-    const pointsCounterDiv = document.getElementById('pointsCounter');
+    // Declare these with 'let' so we can reassign on reset.
+    let sensorReadingsDiv = document.getElementById('sensorReadings');
+    let messageDiv = document.getElementById('message');
+    let pointsCounterDiv = document.getElementById('pointsCounter');
+    const centerDisplay = document.getElementById('centerDisplay');
     const arrowDiv = document.getElementById('arrow');
 
     /* --- Global sensor data variables --- */
@@ -177,7 +179,9 @@
       const now = Date.now();
       if (now - lastSensorUpdate < 500) return;
       lastSensorUpdate = now;
-      sensorReadingsDiv.innerHTML = devicemotionText + '<br>' + deviceOrientationText;
+      if (sensorReadingsDiv) {
+        sensorReadingsDiv.innerHTML = devicemotionText + '<br>' + deviceOrientationText;
+      }
     }
 
     // Utility: Format sensor value so that only full (rounded) digits are shown.
@@ -190,34 +194,18 @@
     // Points variables
     let totalPoints = 0;
     function updatePointsCounter() {
-      pointsCounterDiv.textContent = 'PowerPoints: ' + totalPoints;
+      if (pointsCounterDiv) {
+        pointsCounterDiv.textContent = 'PowerPoints: ' + totalPoints;
+      }
     }
-    // Award points and animate a floating reward.
+    // Award points and (optionally) animate a floating reward.
     function addPoints(pts) {
       totalPoints += pts;
       updatePointsCounter();
-      const ptsBubble = document.createElement('div');
-      ptsBubble.textContent = '+' + pts;
-      ptsBubble.style.position = 'absolute';
-      ptsBubble.style.fontSize = '1.2rem';
-      ptsBubble.style.color = '#FFD700';
-      ptsBubble.style.fontWeight = 'bold';
-      ptsBubble.style.left = '50%';
-      ptsBubble.style.bottom = '190px';
-      ptsBubble.style.opacity = 1;
-      ptsBubble.style.transform = 'translateX(-50%)';
-      ptsBubble.style.transition = 'all 1.5s ease-out';
-      document.body.appendChild(ptsBubble);
-      setTimeout(() => {
-        ptsBubble.style.bottom = '270px';
-        ptsBubble.style.opacity = 0;
-      }, 50);
-      ptsBubble.addEventListener('transitionend', () => {
-        ptsBubble.remove();
-      });
     }
 
-    // Handler for devicemotion events – group as "Strength Metrics"
+    // --- Sensor Reading Handlers ---
+    // "Strength Metrics" (acceleration/rotation)
     function sensorDataUpdate(event) {
       let accIG = event.accelerationIncludingGravity;
       let acc = event.acceleration;
@@ -234,8 +222,7 @@
       }
       updateSensorReadings();
     }
-
-    // Handler for deviceorientation events – group as "Form & Balance"
+    // "Form & Balance" (orientation)
     function sensorOrientationUpdate(event) {
       deviceOrientationText = "<strong>Form &amp; Balance:</strong><br>";
       deviceOrientationText += `Alpha=${formatValue(event.alpha)}, `;
@@ -244,14 +231,38 @@
       updateSensorReadings();
     }
 
+    /* --- Success Screen Display ---
+         When an activity is completed, update the centerDisplay
+         to show a persistent success message/image along with the current PowerPoints balance.
+    */
+    function showSuccessScreen(contentHTML) {
+      centerDisplay.innerHTML = contentHTML +
+        '<div style="font-size:1.5rem; color:#FFD700; margin-top:10px;">PowerPoints: ' + totalPoints + '</div>';
+    }
+
+    // Shake success: Large pouring protein shake image/message.
+    function showShakeSuccessScreen() {
+      const contentHTML = "<div style='font-size:4rem; text-align:center; padding:20px;'>🥤<br>Protein Shake Power!</div>";
+      showSuccessScreen(contentHTML);
+    }
+    // Tilt success: Big balloons.
+    function showTiltSuccessScreen() {
+      const contentHTML = "<div style='font-size:4rem; text-align:center; padding:20px;'>🎈🎈🎈<br>Tilt Mastery Achieved!</div>";
+      showSuccessScreen(contentHTML);
+    }
+    // Swipe success: Big blue arrows.
+    function showSwipeSuccessScreen() {
+      const contentHTML = "<div style='font-size:4rem; text-align:center; padding:20px;'>⬆️⬆️⬆️<br>Speedy Swipe Success!</div>";
+      showSuccessScreen(contentHTML);
+    }
+
     /* --- Gesture Test Code --- */
 
-    /* 1. Shake Test */
+    /* 1. Shake */
     const shakeButton = document.getElementById('shakeButton');
     let shakeDetected = false;
     let shakeMotionListener = null;
     let shakeTimeout = null;
-    // Threshold for shake detection (using acceleration)
     const shakeAccelerationThreshold = 12; // m/s²
     const shakeListeningTime = 10000; // 10 seconds
 
@@ -268,12 +279,10 @@
         shakeDetected = true;
         if (shakeTimeout) clearTimeout(shakeTimeout);
         stopShakeListening();
-        // Show a large pouring protein shake animation for success:
-        showShakeSuccess();
-        addPoints(10);
+        addPoints(10);  // Award 10 PowerPoints
+        showShakeSuccessScreen();
       }
     }
-
     function stopShakeListening() {
       if (shakeMotionListener) {
         window.removeEventListener('devicemotion', shakeMotionListener);
@@ -284,9 +293,10 @@
         shakeTimeout = null;
       }
     }
-
     function startShakeTest() {
       shakeDetected = false;
+      // While activity is running, the center display shows sensor readings
+      // (which are updated via sensorDataUpdate and sensorOrientationUpdate)
       messageDiv.textContent = "Shake: Shake your phone like you're lifting heavy weights!";
       if (!sensorListenersAdded) {
         window.addEventListener('devicemotion', sensorDataUpdate);
@@ -319,58 +329,35 @@
         }
       }, shakeListeningTime);
     }
-
-    // Show a large, eye-catching pouring protein shake success animation.
-    function showShakeSuccess() {
-      const shakeDiv = document.createElement('div');
-      shakeDiv.innerHTML = "<div style='font-size:4rem; text-align:center; padding:20px;'>🥤<br>Protein Shake Power!</div>";
-      shakeDiv.style.position = 'absolute';
-      shakeDiv.style.top = '25%';
-      shakeDiv.style.left = '0';
-      shakeDiv.style.width = '100%';
-      shakeDiv.style.height = '50%';
-      shakeDiv.style.backgroundColor = 'rgba(0, 0, 0, 0.9)';
-      shakeDiv.style.color = '#FFD700';
-      shakeDiv.style.zIndex = '100';
-      document.body.appendChild(shakeDiv);
-      setTimeout(() => {
-        shakeDiv.remove();
-      }, 3000);
-    }
-
     shakeButton.addEventListener('click', startShakeTest);
 
-    /* 2. Tilt Test */
+    /* 2. Tilt */
     const tiltButton = document.getElementById('tiltButton');
     let tiltBaseline = null;
-    // For tilt, we trigger when the beta angle changes by 90° from the starting (baseline) value.
+    // Tilt triggers when the beta angle changes by 90° from the starting value.
     function handleTilt(event) {
       const currentBeta = event.beta !== null ? formatValue(event.beta) : 0;
       if (tiltBaseline === null) {
         tiltBaseline = currentBeta;
         messageDiv.textContent = "Tilt: Start tilting – change your angle by 90°!";
       } else if (Math.abs(currentBeta - tiltBaseline) >= 90) {
-        createBubbles(15, 1.5); // Show big balloons.
-        messageDiv.textContent = "Boom! You tilted like a champion – gym gains unlocked!";
-        addPoints(15);
+        addPoints(15);  // Award 15 PowerPoints
+        showTiltSuccessScreen();
         window.removeEventListener('deviceorientation', handleTilt);
         tiltBaseline = null;
       }
     }
-
     function startTiltTest() {
       tiltBaseline = null;
       messageDiv.textContent = "Tilt: Tilt your phone so your beta angle changes by 90°!";
       window.addEventListener('deviceorientation', handleTilt);
     }
-
     tiltButton.addEventListener('click', startTiltTest);
 
-    /* 3. Swipe Test */
+    /* 3. Swipe */
     const swipeButton = document.getElementById('swipeButton');
     let touchStartY = null;
     let touchEndY = null;
-
     function handleTouchStart(e) {
       touchStartY = e.changedTouches[0].screenY;
     }
@@ -378,16 +365,14 @@
       touchEndY = e.changedTouches[0].screenY;
       const deltaY = touchStartY - touchEndY;
       if (deltaY > 50) {
-        showSwipeSuccess();
-        messageDiv.textContent = "Speedy swipe! That move is as quick as a sprint on the treadmill!";
-        addPoints(20);
+        addPoints(20);  // Award 20 PowerPoints
+        showSwipeSuccessScreen();
       } else {
         messageDiv.textContent = 'Swipe too short. Push harder!';
       }
       document.removeEventListener('touchstart', handleTouchStart);
       document.removeEventListener('touchend', handleTouchEnd);
     }
-
     function startSwipeTest() {
       messageDiv.textContent = "Swipe: Swipe up like you're running up stairs for a cardio boost!";
       arrowDiv.style.display = 'block';
@@ -398,35 +383,21 @@
       document.addEventListener('touchstart', handleTouchStart);
       document.addEventListener('touchend', handleTouchEnd);
     }
-
-    // Show a set of large blue arrows running from bottom to top.
-    function showSwipeSuccess() {
-      const arrowCount = 5;
-      for (let i = 0; i < arrowCount; i++) {
-        const arrow = document.createElement('div');
-        arrow.textContent = "⬆️";
-        arrow.style.position = 'absolute';
-        arrow.style.left = (10 + i * 20) + '%';
-        arrow.style.bottom = '-100px';
-        arrow.style.fontSize = '5rem';
-        arrow.style.color = '#0091EA';
-        arrow.style.opacity = 1;
-        arrow.style.transition = 'all 2s ease-out';
-        document.body.appendChild(arrow);
-        setTimeout(() => {
-          arrow.style.bottom = '110%';
-          arrow.style.opacity = 0;
-        }, 100);
-        arrow.addEventListener('transitionend', () => {
-          arrow.remove();
-        });
-      }
-    }
-
     swipeButton.addEventListener('click', startSwipeTest);
 
-    /* 4. Reset Button */
+    /* 4. Reset */
     const resetButton = document.getElementById('resetButton');
+    function resetDisplay() {
+      // Restore the default center display with sensor readings and messages.
+      centerDisplay.innerHTML =
+        '<div id="sensorReadings">Waiting for sensor data...</div>' +
+        '<div id="message"></div>' +
+        '<div id="pointsCounter">PowerPoints: ' + totalPoints + '</div>';
+      // Reassign the elements
+      sensorReadingsDiv = document.getElementById('sensorReadings');
+      messageDiv = document.getElementById('message');
+      pointsCounterDiv = document.getElementById('pointsCounter');
+    }
     resetButton.addEventListener('click', () => {
       messageDiv.textContent = "Ready for the next round of gym action!";
       arrowDiv.style.display = 'none';
@@ -434,27 +405,8 @@
       window.removeEventListener('deviceorientation', handleTilt);
       document.removeEventListener('touchstart', handleTouchStart);
       document.removeEventListener('touchend', handleTouchEnd);
+      resetDisplay();
     });
-
-    /* --- Helper: Bubble Animation (used for tilt success) --- */
-    // Accepts a scale factor to make the balloons bigger.
-    function createBubbles(count = 10, scale = 1) {
-      for (let i = 0; i < count; i++) {
-        const bubble = document.createElement('div');
-        bubble.classList.add('bubble');
-        const baseSize = Math.random() * 30 + 20; // random size between 20 and 50px
-        const size = baseSize * scale;
-        bubble.style.width = `${size}px`;
-        bubble.style.height = `${size}px`;
-        bubble.style.left = Math.random() * (window.innerWidth - size) + 'px';
-        bubble.style.top = window.innerHeight - size + 'px';
-        bubble.style.animationDelay = Math.random() * 0.5 + 's';
-        document.body.appendChild(bubble);
-        bubble.addEventListener('animationend', () => {
-          bubble.remove();
-        });
-      }
-    }
   </script>
 </body>
 </html>
