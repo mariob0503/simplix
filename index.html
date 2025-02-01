@@ -5,14 +5,15 @@
   <title>Lift&Learn Gesture Testing</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    /* Global styling */
+    /* Global styling using a Simplix-inspired palette */
     html, body {
       margin: 0;
       padding: 0;
       height: 100%;
-      background-color: black;
+      background-color: #121212;  /* Dark background */
       font-family: Arial, sans-serif;
       overflow: hidden;
+      color: #ffffff;
     }
     /* Flag styling at the top */
     #flag {
@@ -22,42 +23,33 @@
       text-align: center;
       padding: 10px 0;
       font-size: 1.43rem;
-      color: white;
       line-height: 1.3;
       z-index: 1;
       pointer-events: none;
     }
-    /* Special inline classes for blue words */
-    .blue { color: blue; }
-    .blue-bold { color: blue; font-weight: bold; }
+    /* Accent color classes (using the Simplix blue accent) */
+    .blue { 
+      color: #0091EA; 
+    }
+    .blue-bold { 
+      color: #0091EA; 
+      font-weight: bold; 
+    }
     /* Big and bold styling for Lift&Learn */
     .big-bold {
       font-size: 2.86rem;
       font-weight: bold;
     }
-    /* Points counter styling */
-    #pointsCounter {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      font-size: 1.5rem;
-      color: gold;
-      background: rgba(0, 0, 0, 0.5);
-      padding: 10px 15px;
-      border-radius: 10px;
-      z-index: 100;
-    }
-    /* Container for messages, sensor readings, and buttons (fixed at the bottom) */
+    /* Container for sensor readings, messages, points counter, and buttons (fixed at the bottom) */
     .container {
       position: absolute;
       bottom: 0;
       left: 50%;
       transform: translateX(-50%);
       width: 100%;
-      height: 150px;
+      height: 180px; /* Adjusted height to accommodate the points counter */
       text-align: center;
       z-index: 10;
-      color: white;
     }
     /* Sensor readings area */
     #sensorReadings {
@@ -68,7 +60,12 @@
     #message {
       margin-bottom: 5px;
       font-size: 1.3rem;
-      color: white;
+    }
+    /* Points counter styling (now inside container) */
+    #pointsCounter {
+      font-size: 1.5rem;
+      color: #FFD700; /* Gold for PowerPoints */
+      margin-bottom: 5px;
     }
     /* Buttons container */
     .buttons {
@@ -80,8 +77,8 @@
       padding: 10px 20px;
       margin: 5px;
       font-size: 1.1rem;
-      background-color: blue;
-      color: white;
+      background-color: #0091EA; /* Simplix blue accent */
+      color: #ffffff;
       border: none;
       border-radius: 5px;
       cursor: pointer;
@@ -92,7 +89,7 @@
     /* Bubble (balloon) styles for success feedback */
     .bubble {
       position: absolute;
-      background: rgba(135, 206, 250, 0.7);
+      background: rgba(0, 145, 234, 0.7);  /* Use the accent blue with transparency */
       border-radius: 50%;
       opacity: 0;
       animation: rise 2s ease-out forwards;
@@ -145,13 +142,11 @@
     <div>and get great discounts on Supplements</div>
   </div>
 
-  <!-- Points counter displayed in the top-right -->
-  <div id="pointsCounter">PowerPoints: 0</div>
-
-  <!-- Container for sensor readings, messages, and buttons -->
+  <!-- Container for sensor readings, messages, points counter, and buttons -->
   <div class="container">
     <div id="sensorReadings"></div>
     <div id="message"></div>
+    <div id="pointsCounter">PowerPoints: 0</div>
     <div class="buttons">
       <button id="shakeButton">Test Shake</button>
       <button id="tiltButton">Test Tilt</button>
@@ -188,16 +183,16 @@
       ptsBubble.textContent = '+' + pts;
       ptsBubble.style.position = 'absolute';
       ptsBubble.style.fontSize = '1.2rem';
-      ptsBubble.style.color = 'gold';
+      ptsBubble.style.color = '#FFD700';
       ptsBubble.style.fontWeight = 'bold';
       ptsBubble.style.left = '50%';
-      ptsBubble.style.bottom = '160px';
+      ptsBubble.style.bottom = '190px';
       ptsBubble.style.opacity = 1;
       ptsBubble.style.transform = 'translateX(-50%)';
       ptsBubble.style.transition = 'all 1.5s ease-out';
       document.body.appendChild(ptsBubble);
       setTimeout(() => {
-        ptsBubble.style.bottom = '250px';
+        ptsBubble.style.bottom = '270px';
         ptsBubble.style.opacity = 0;
       }, 50);
       ptsBubble.addEventListener('transitionend', () => {
@@ -210,27 +205,27 @@
       sensorReadingsDiv.innerHTML = devicemotionText + '<br>' + deviceOrientationText;
     }
 
-    // Handler for devicemotion events to update sensor data
+    // Handler for devicemotion events to update sensor data (rounded to no decimal places)
     function sensorDataUpdate(event) {
       let accIG = event.accelerationIncludingGravity;
       let acc = event.acceleration;
       let rotation = event.rotationRate;
       devicemotionText = 'DeviceMotion: ';
       if (accIG) {
-        devicemotionText += `Acc IG: x=${accIG.x?.toFixed(2)}, y=${accIG.y?.toFixed(2)}, z=${accIG.z?.toFixed(2)}. `;
+        devicemotionText += `Acc IG: x=${accIG.x !== null ? accIG.x.toFixed(0) : '0'}, y=${accIG.y !== null ? accIG.y.toFixed(0) : '0'}, z=${accIG.z !== null ? accIG.z.toFixed(0) : '0'}. `;
       }
       if (acc) {
-        devicemotionText += `Acc: x=${acc.x?.toFixed(2)}, y=${acc.y?.toFixed(2)}, z=${acc.z?.toFixed(2)}. `;
+        devicemotionText += `Acc: x=${acc.x !== null ? acc.x.toFixed(0) : '0'}, y=${acc.y !== null ? acc.y.toFixed(0) : '0'}, z=${acc.z !== null ? acc.z.toFixed(0) : '0'}. `;
       }
       if (rotation) {
-        devicemotionText += `Rotation: alpha=${rotation.alpha?.toFixed(2)}, beta=${rotation.beta?.toFixed(2)}, gamma=${rotation.gamma?.toFixed(2)}.`;
+        devicemotionText += `Rotation: alpha=${rotation.alpha !== null ? rotation.alpha.toFixed(0) : '0'}, beta=${rotation.beta !== null ? rotation.beta.toFixed(0) : '0'}, gamma=${rotation.gamma !== null ? rotation.gamma.toFixed(0) : '0'}.`;
       }
       updateSensorReadings();
     }
 
-    // Handler for deviceorientation events to update sensor data
+    // Handler for deviceorientation events to update sensor data (rounded to no decimals)
     function sensorOrientationUpdate(event) {
-      deviceOrientationText = `Orientation: alpha=${event.alpha?.toFixed(2)}, beta=${event.beta?.toFixed(2)}, gamma=${event.gamma?.toFixed(2)}.`;
+      deviceOrientationText = `Orientation: alpha=${event.alpha !== null ? event.alpha.toFixed(0) : '0'}, beta=${event.beta !== null ? event.beta.toFixed(0) : '0'}, gamma=${event.gamma !== null ? event.gamma.toFixed(0) : '0'}.`;
       updateSensorReadings();
     }
 
@@ -241,25 +236,27 @@
     let shakeDetected = false;
     let shakeMotionListener = null;
     let shakeTimeout = null;
-    const shakeThreshold = 3; // m/s² deviation from 9.8
+    // New threshold for shake detection (using acceleration, not deviation from gravity)
+    const shakeAccelerationThreshold = 12; // m/s²
     const shakeListeningTime = 10000; // 10 seconds
 
     function handleShakeMotion(event) {
-      const acc = event.accelerationIncludingGravity;
-      if (!acc) return;
+      let acc = event.acceleration;
+      if (!acc || (acc.x === null && acc.y === null && acc.z === null)) {
+        // Fallback to accelerationIncludingGravity if 'acceleration' is not available
+        acc = event.accelerationIncludingGravity;
+      }
       const x = acc.x || 0;
       const y = acc.y || 0;
       const z = acc.z || 0;
       const magnitude = Math.sqrt(x * x + y * y + z * z);
-      if (Math.abs(magnitude - 9.8) > shakeThreshold) {
-        if (!shakeDetected) {
-          shakeDetected = true;
-          if (shakeTimeout) clearTimeout(shakeTimeout);
-          stopShakeListening();
-          createBubbles(15);
-          messageDiv.textContent = 'Congrats, shake detected!';
-          addPoints(10);  // Award 10 PowerPoints for a successful shake
-        }
+      if (magnitude > shakeAccelerationThreshold && !shakeDetected) {
+        shakeDetected = true;
+        if (shakeTimeout) clearTimeout(shakeTimeout);
+        stopShakeListening();
+        createBubbles(15);
+        messageDiv.textContent = 'Congrats, shake detected!';
+        addPoints(10);  // Award 10 PowerPoints for a successful shake
       }
     }
 
