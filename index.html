@@ -40,38 +40,36 @@
       font-size: 2.86rem;
       font-weight: bold;
     }
-    /* Container for sensor readings, messages, points counter, and buttons (fixed at the bottom) */
-    .container {
+    /* Center container for sensor readings, messages, and points counter */
+    #centerDisplay {
       position: absolute;
-      bottom: 0;
+      top: 50%;
       left: 50%;
-      transform: translateX(-50%);
-      width: 100%;
-      height: 180px; /* Adjusted height to accommodate the points counter */
+      transform: translate(-50%, -50%);
       text-align: center;
       z-index: 10;
     }
-    /* Sensor readings area */
+    /* Styling for sensor readings, messages, and points counter */
     #sensorReadings {
       font-size: 0.9rem;
-      margin-bottom: 5px;
+      margin-bottom: 10px;
     }
-    /* Fixed message area */
     #message {
-      margin-bottom: 5px;
       font-size: 1.3rem;
+      margin-bottom: 10px;
     }
-    /* Points counter styling (now inside container) */
     #pointsCounter {
       font-size: 1.5rem;
       color: #FFD700; /* Gold for PowerPoints */
-      margin-bottom: 5px;
+      margin-bottom: 10px;
     }
-    /* Buttons container */
+    /* Buttons container remains fixed at the bottom */
     .buttons {
       position: absolute;
       bottom: 10px;
       width: 100%;
+      text-align: center;
+      z-index: 20;
     }
     button {
       padding: 10px 20px;
@@ -89,7 +87,7 @@
     /* Bubble (balloon) styles for success feedback */
     .bubble {
       position: absolute;
-      background: rgba(0, 145, 234, 0.7);  /* Use the accent blue with transparency */
+      background: rgba(0, 145, 234, 0.7);  /* Accent blue with transparency */
       border-radius: 50%;
       opacity: 0;
       animation: rise 2s ease-out forwards;
@@ -142,32 +140,43 @@
     <div>and get great discounts on Supplements</div>
   </div>
 
-  <!-- Container for sensor readings, messages, points counter, and buttons -->
-  <div class="container">
+  <!-- Center container for sensor readings, messages, and points counter -->
+  <div id="centerDisplay">
     <div id="sensorReadings"></div>
     <div id="message"></div>
     <div id="pointsCounter">PowerPoints: 0</div>
-    <div class="buttons">
-      <button id="shakeButton">Test Shake</button>
-      <button id="tiltButton">Test Tilt</button>
-      <button id="swipeButton">Test Swipe</button>
-      <button id="resetButton">Reset</button>
-    </div>
+  </div>
+
+  <!-- Buttons container fixed at the bottom -->
+  <div class="buttons">
+    <button id="shakeButton">Test Shake</button>
+    <button id="tiltButton">Test Tilt</button>
+    <button id="swipeButton">Test Swipe</button>
+    <button id="resetButton">Reset</button>
   </div>
 
   <!-- Arrow element for swipe test prompt -->
   <div id="arrow">⬆️</div>
 
   <script>
-    const messageDiv = document.getElementById('message');
-    const arrowDiv = document.getElementById('arrow');
     const sensorReadingsDiv = document.getElementById('sensorReadings');
+    const messageDiv = document.getElementById('message');
     const pointsCounterDiv = document.getElementById('pointsCounter');
+    const arrowDiv = document.getElementById('arrow');
 
     /* --- Global sensor data variables --- */
     let devicemotionText = '';
     let deviceOrientationText = '';
     let sensorListenersAdded = false;
+
+    // Throttle sensor updates: update at most once every 500ms.
+    let lastSensorUpdate = 0;
+    function updateSensorReadings() {
+      const now = Date.now();
+      if (now - lastSensorUpdate < 500) return;
+      lastSensorUpdate = now;
+      sensorReadingsDiv.innerHTML = devicemotionText + '<br>' + deviceOrientationText;
+    }
 
     // Points variables
     let totalPoints = 0;
@@ -198,11 +207,6 @@
       ptsBubble.addEventListener('transitionend', () => {
         ptsBubble.remove();
       });
-    }
-
-    // Update the sensor readings div by combining the current devicemotion and orientation text
-    function updateSensorReadings() {
-      sensorReadingsDiv.innerHTML = devicemotionText + '<br>' + deviceOrientationText;
     }
 
     // Handler for devicemotion events to update sensor data (rounded to no decimal places)
