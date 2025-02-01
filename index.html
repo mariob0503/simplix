@@ -11,23 +11,28 @@
       padding: 0;
       height: 100%;
       background-color: black;
-      color: white;
       font-family: Arial, sans-serif;
       overflow: hidden;
     }
-    /* Flag at the top */
+    /* Flag styling */
     #flag {
       position: absolute;
       top: 0;
       width: 100%;
       text-align: center;
       padding: 10px 0;
-      font-size: 1.2rem;
-      line-height: 1.4;
+      font-size: 2.2rem; /* Twice the button text size (buttons: 1.1rem) */
+      color: blue; /* Use same blue as for the buttons */
+      line-height: 1.3;
     }
-    /* Highlight class for special words */
+    /* Special styling for highlighted words */
     .highlight {
       color: lightblue;
+    }
+    /* Big and bold styling for Lift&Learn */
+    .big-bold {
+      font-size: 4.4rem; /* Double the size of the rest of the flag text */
+      font-weight: bold;
     }
     /* Container for buttons (centered vertically & horizontally) */
     .container {
@@ -54,6 +59,7 @@
       margin: 20px;
       font-size: 1.3rem;
       text-align: center;
+      color: white;
     }
     /* Bubble (balloon) styles for success feedback */
     .bubble {
@@ -101,11 +107,11 @@
 <body>
   <!-- Fancy Flag at the top -->
   <div id="flag">
-    Welcome to<br>
-    <span class="highlight">Lift</span>&Learn<br>
-    your <span class="highlight">Simplix</span> Gym Reward System<br>
-    collect your <span class="highlight">Power</span>Points<br>
-    and get great discounts on Supplements
+    <div>Welcome to</div>
+    <div class="big-bold"><span class="highlight">Lift</span>&Learn</div>
+    <div>your <strong><span class="highlight">Simplix</span> Gym Reward System</strong></div>
+    <div>collect your <strong><span class="highlight">Power</span>Points</strong></div>
+    <div>and get great discounts on Supplements</div>
   </div>
 
   <!-- Centered container for gesture test buttons and messages -->
@@ -254,8 +260,6 @@
       arrowDiv.classList.add('animate-arrow');
       arrowDiv.addEventListener('animationend', () => {
         arrowDiv.classList.remove('animate-arrow');
-        // You may choose to hide the arrow here if desired:
-        // arrowDiv.style.display = 'none';
       }, {once: true});
       document.addEventListener('touchstart', handleTouchStart);
       document.addEventListener('touchend', handleTouchEnd);
