@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Lift and Earn</title>
+  <title>Gesture Testing</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     /* Basic reset and styling */
@@ -18,14 +18,13 @@
     .container {
       display: flex;
       flex-direction: column;
-      justify-content: center;
       align-items: center;
-      height: 100%;
-      text-align: center;
+      padding: 20px;
     }
     button {
-      padding: 15px 30px;
-      font-size: 1.2rem;
+      padding: 10px 20px;
+      margin: 5px;
+      font-size: 1.1rem;
       background-color: blue;
       color: white;
       border: none;
@@ -36,10 +35,11 @@
       transform: scale(0.98);
     }
     #message {
-      margin-top: 20px;
-      font-size: 1.4rem;
+      margin: 20px;
+      font-size: 1.3rem;
+      text-align: center;
     }
-    /* Bubble styles */
+    /* Bubble styles (for shake feedback) */
     .bubble {
       position: absolute;
       background: rgba(135, 206, 250, 0.7);
@@ -57,114 +57,87 @@
         opacity: 0;
       }
     }
+    /* Arrow animation for swipe */
+    #arrow {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 3rem;
+      opacity: 0;
+      display: none;
+    }
+    .animate-arrow {
+      animation: swipeArrow 1.5s ease-out forwards;
+    }
+    @keyframes swipeArrow {
+      0% {
+        bottom: 20px;
+        opacity: 1;
+      }
+      100% {
+        bottom: 80%;
+        opacity: 0;
+      }
+    }
   </style>
 </head>
 <body>
   <div class="container">
-    <button id="liftEarnButton">start lift and learn</button>
+    <button id="shakeButton">Test Shake</button>
+    <button id="tiltButton">Test Tilt</button>
+    <button id="swipeButton">Test Swipe</button>
+    <button id="resetButton">Reset</button>
     <div id="message"></div>
   </div>
+  <!-- Arrow element for swipe test -->
+  <div id="arrow">⬆️</div>
 
   <script>
-    // DOM references
-    const liftEarnButton = document.getElementById('liftEarnButton');
     const messageDiv = document.getElementById('message');
+    const arrowDiv = document.getElementById('arrow');
 
-    // Shake detection configuration
-    const shakeThreshold = 1.5;       // Lower threshold for a "mild" shake (m/s² deviation)
-    const requiredShakeDuration = 3000; // Required continuous shake time (in ms)
-    const listeningTimeLimit = 10000;   // Total time allowed to perform the gesture (in ms)
-    
-    let shakeStartTime = null;
-    let shakingActive = false;
-    let gestureComplete = false;
-    let motionListener = null;
-    let listeningTimeout = null;
-    
-    // Helper function to create bubbles on the screen
-    function createBubbles(count = 10) {
-      for (let i = 0; i < count; i++) {
-        const bubble = document.createElement('div');
-        bubble.classList.add('bubble');
-        // Random size between 20 and 50px
-        const size = Math.random() * 30 + 20;
-        bubble.style.width = `${size}px`;
-        bubble.style.height = `${size}px`;
-        // Random horizontal position within the viewport
-        bubble.style.left = Math.random() * (window.innerWidth - size) + 'px';
-        // Start at the bottom of the viewport
-        bubble.style.top = window.innerHeight - size + 'px';
-        // Random animation delay for variety
-        bubble.style.animationDelay = Math.random() * 0.5 + 's';
-        document.body.appendChild(bubble);
-        // Remove bubble from DOM after animation completes
-        bubble.addEventListener('animationend', () => bubble.remove());
-      }
-    }
-    
-    // Stop listening to motion events and clear any timers
-    function stopMotionListening() {
-      if (motionListener) {
-        window.removeEventListener('devicemotion', motionListener);
-        motionListener = null;
-      }
-      if (listeningTimeout) {
-        clearTimeout(listeningTimeout);
-        listeningTimeout = null;
-      }
-    }
-    
-    // Handle device motion events for a sustained mild shake
-    function handleMotion(event) {
-      // Use acceleration including gravity
+    /* =========================
+       1. Shake Test
+       ========================= */
+    const shakeButton = document.getElementById('shakeButton');
+    let shakeDetected = false;
+    let shakeMotionListener = null;
+    const shakeThreshold = 3; // m/s² deviation from 9.8
+    const shakeListeningTime = 10000; // 10 seconds
+
+    function handleShakeMotion(event) {
       const acc = event.accelerationIncludingGravity;
       if (!acc) return;
-      
-      // Calculate the magnitude of the acceleration vector
       const x = acc.x || 0;
       const y = acc.y || 0;
       const z = acc.z || 0;
-      const magnitude = Math.sqrt(x * x + y * y + z * z);
-      
-      // A phone at rest measures roughly 9.8 m/s² (gravity).  
-      // We check if the deviation is above our shakeThreshold.
+      const magnitude = Math.sqrt(x*x + y*y + z*z);
       if (Math.abs(magnitude - 9.8) > shakeThreshold) {
-        // If shaking just started, record the time
-        if (!shakingActive) {
-          shakingActive = true;
-          shakeStartTime = performance.now();
-        } else {
-          // If shaking has been active, check its duration
-          const currentDuration = performance.now() - shakeStartTime;
-          if (currentDuration >= requiredShakeDuration) {
-            gestureComplete = true;
-            stopMotionListening();
-            triggerTrainingLogged();
-          }
-        }
-      } else {
-        // If acceleration is below threshold, reset the continuous shake timer
-        shakingActive = false;
-        shakeStartTime = null;
+        shakeDetected = true;
       }
     }
-    
-    // Trigger the "training logged" feedback (bubbles and message)
-    function triggerTrainingLogged() {
-      createBubbles(15);
-      messageDiv.textContent = 'Congrats, your training is logged!';
-      liftEarnButton.textContent = 'start lift and learn';
+
+    function stopShakeListening() {
+      if (shakeMotionListener) {
+        window.removeEventListener('devicemotion', shakeMotionListener);
+        shakeMotionListener = null;
+      }
     }
-    
-    // Request motion sensor access (for iOS 13+)
-    function requestMotionPermission() {
-      if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
+
+    function startShakeTest() {
+      shakeDetected = false;
+      messageDiv.textContent = 'Shake: Please shake your phone for 10 seconds...';
+      // Request sensor permission if needed
+      if (typeof DeviceMotionEvent !== 'undefined' &&
+          typeof DeviceMotionEvent.requestPermission === 'function') {
         DeviceMotionEvent.requestPermission()
           .then(response => {
             if (response === 'granted') {
-              startMotionListening();
+              shakeMotionListener = handleShakeMotion;
+              window.addEventListener('devicemotion', shakeMotionListener);
             } else {
-              messageDiv.textContent = 'Permission not granted to access motion sensors.';
+              messageDiv.textContent = 'Permission not granted for motion sensors.';
             }
           })
           .catch(err => {
@@ -172,38 +145,130 @@
             messageDiv.textContent = 'Error requesting motion sensor permission.';
           });
       } else {
-        // For browsers that don't require explicit permission
-        startMotionListening();
+        shakeMotionListener = handleShakeMotion;
+        window.addEventListener('devicemotion', shakeMotionListener);
+      }
+
+      setTimeout(() => {
+        stopShakeListening();
+        if (shakeDetected) {
+          // Create bubbles for feedback
+          createBubbles(15);
+          messageDiv.textContent = 'Congrats, shake detected!';
+        } else {
+          messageDiv.textContent = 'No shaking detected. Try again!';
+        }
+      }, shakeListeningTime);
+    }
+
+    shakeButton.addEventListener('click', startShakeTest);
+
+    /* =========================
+       2. Tilt Test
+       ========================= */
+    const tiltButton = document.getElementById('tiltButton');
+    let tiltTriggered = false;
+    const tiltThreshold = -30;  // beta angle (degrees): tilt forward
+    const returnThreshold = 10; // near upright
+
+    function handleTilt(event) {
+      const beta = event.beta; // front-to-back tilt
+      if (beta < tiltThreshold && !tiltTriggered) {
+        tiltTriggered = true;
+        messageDiv.textContent = 'Tilt detected! Now return to upright...';
+      }
+      if (tiltTriggered && Math.abs(beta) < returnThreshold) {
+        messageDiv.textContent = 'Congrats, tilt detected!';
+        window.removeEventListener('deviceorientation', handleTilt);
+        tiltTriggered = false;
       }
     }
-    
-    // Start listening for motion events and allow up to listeningTimeLimit for the gesture
-    function startMotionListening() {
-      // Reset gesture tracking variables
-      shakingActive = false;
-      shakeStartTime = null;
-      gestureComplete = false;
-      
-      motionListener = handleMotion;
-      window.addEventListener('devicemotion', motionListener);
-      
-      listeningTimeout = setTimeout(() => {
-        stopMotionListening();
-        if (!gestureComplete) {
-          messageDiv.textContent = 'No shaking detected. Try again!';
-          liftEarnButton.textContent = 'start lift and learn';
-        }
-      }, listeningTimeLimit);
+
+    function startTiltTest() {
+      messageDiv.textContent = 'Tilt: Tilt your phone forward and then return upright.';
+      window.addEventListener('deviceorientation', handleTilt);
     }
-    
-    // Button click handler
-    liftEarnButton.addEventListener('click', () => {
-      // Change button text and update instructions
-      liftEarnButton.textContent = 'go lift';
-      messageDiv.textContent = 'Gently shake your phone for at least 3 seconds...';
-      // Request motion sensor access and start listening for the gesture
-      requestMotionPermission();
+
+    tiltButton.addEventListener('click', startTiltTest);
+
+    /* =========================
+       3. Swipe Test
+       ========================= */
+    const swipeButton = document.getElementById('swipeButton');
+    let touchStartY = null;
+    let touchEndY = null;
+
+    function handleTouchStart(e) {
+      touchStartY = e.changedTouches[0].screenY;
+    }
+    function handleTouchEnd(e) {
+      touchEndY = e.changedTouches[0].screenY;
+      const deltaY = touchStartY - touchEndY;
+      // Require a minimum upward swipe distance (e.g., 50 pixels)
+      if (deltaY > 50) {
+        messageDiv.textContent = 'Swipe detected!';
+        showSwipeArrow();
+      } else {
+        messageDiv.textContent = 'Swipe too short. Try again!';
+      }
+      // Remove swipe listeners after a swipe is detected
+      document.removeEventListener('touchstart', handleTouchStart);
+      document.removeEventListener('touchend', handleTouchEnd);
+    }
+
+    function startSwipeTest() {
+      messageDiv.textContent = 'Swipe up on the screen.';
+      // Add touch event listeners to detect swipe up anywhere on the page
+      document.addEventListener('touchstart', handleTouchStart);
+      document.addEventListener('touchend', handleTouchEnd);
+    }
+
+    swipeButton.addEventListener('click', startSwipeTest);
+
+    // Function to show a moving arrow animation for swipe
+    function showSwipeArrow() {
+      arrowDiv.style.display = 'block';
+      arrowDiv.classList.add('animate-arrow');
+      // Remove the animation class after it finishes so it can be replayed
+      arrowDiv.addEventListener('animationend', () => {
+        arrowDiv.classList.remove('animate-arrow');
+        arrowDiv.style.display = 'none';
+      }, {once: true});
+    }
+
+    /* =========================
+       4. Reset Button
+       ========================= */
+    const resetButton = document.getElementById('resetButton');
+    resetButton.addEventListener('click', () => {
+      messageDiv.textContent = '';
+      arrowDiv.style.display = 'none';
+      // Remove any lingering event listeners
+      stopShakeListening();
+      window.removeEventListener('deviceorientation', handleTilt);
+      document.removeEventListener('touchstart', handleTouchStart);
+      document.removeEventListener('touchend', handleTouchEnd);
     });
+
+    /* =========================
+       Helper: Bubble Animation (used in Shake Test)
+       ========================= */
+    function createBubbles(count = 10) {
+      for (let i = 0; i < count; i++) {
+        const bubble = document.createElement('div');
+        bubble.classList.add('bubble');
+        const size = Math.random() * 30 + 20; // random size between 20 and 50px
+        bubble.style.width = `${size}px`;
+        bubble.style.height = `${size}px`;
+        bubble.style.left = Math.random() * (window.innerWidth - size) + 'px';
+        bubble.style.top = window.innerHeight - size + 'px';
+        bubble.style.animationDelay = Math.random() * 0.5 + 's';
+        document.body.appendChild(bubble);
+        bubble.addEventListener('animationend', () => {
+          bubble.remove();
+        });
+      }
+    }
   </script>
 </body>
 </html>
