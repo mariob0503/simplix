@@ -57,10 +57,9 @@
       margin-bottom: 10px;
     }
     /* Points balance styled in blue and bold */
+    /* (Now updated so "Power" is white and "Points: X" is blue) */
     #pointsCounter {
       font-size: 1.5rem;
-      color: #0091EA;
-      font-weight: bold;
       margin-bottom: 10px;
     }
     /* Shake progress bar container (horizontal) */
@@ -156,6 +155,9 @@
       75% { transform: translate(2px, -2px) rotate(-5deg); }
       100% { transform: translate(0px, 0px) rotate(0deg); }
     }
+    /* Additional classes for points counter text formatting */
+    .power-white { color: #ffffff; }
+    .points-blue { color: #0091EA; }
   </style>
 </head>
 <body>
@@ -169,7 +171,9 @@
   <div id="centerDisplay">
     <div id="sensorReadings">Waiting for sensor data...</div>
     <div id="message"></div>
-    <div id="pointsCounter">PowerPoints: 0</div>
+    <div id="pointsCounter">
+      <span class="power-white">Power</span><span class="points-blue">Points: 0</span>
+    </div>
   </div>
 
   <!-- Buttons container fixed at the bottom -->
@@ -219,7 +223,8 @@
       let totalPoints = 0;
       function updatePointsCounter() {
         if (pointsCounterDiv) {
-          pointsCounterDiv.textContent = 'PowerPoints: ' + totalPoints;
+          // Update points text with "Power" in white and "Points: X" in blue.
+          pointsCounterDiv.innerHTML = '<span class="power-white">Power</span><span class="points-blue">Points: ' + totalPoints + '</span>';
         }
       }
       function addPoints(pts) {
@@ -255,7 +260,9 @@
       // Success Screen Display
       function showSuccessScreen(contentHTML) {
         centerDisplay.innerHTML = contentHTML +
-          '<div style="font-size:1.5rem; color:#0091EA; font-weight:bold; margin-top:10px;">PowerPoints: ' + totalPoints + '</div>';
+          '<div style="font-size:1.5rem; color:#0091EA; font-weight:bold; margin-top:10px;">' +
+          '<span class="power-white">Power</span><span class="points-blue">Points: ' + totalPoints + '</span>' +
+          '</div>';
       }
 
       // Shake Success: Show a shaking protein bottle for 3 seconds.
@@ -424,7 +431,24 @@
         sensorReadingsDiv = document.getElementById('sensorReadings');
         messageDiv = document.getElementById('message');
         pointsCounterDiv = document.getElementById('pointsCounter');
-        window.addEventListener('deviceorientation', handleTilt);
+        // Request permission for device orientation similar to the shake test
+        if (typeof DeviceOrientationEvent !== 'undefined' &&
+            typeof DeviceOrientationEvent.requestPermission === 'function') {
+          DeviceOrientationEvent.requestPermission()
+            .then(response => {
+              if (response === 'granted') {
+                window.addEventListener('deviceorientation', handleTilt);
+              } else {
+                messageDiv.textContent = 'Permission not granted for device orientation.';
+              }
+            })
+            .catch(err => {
+              console.error(err);
+              messageDiv.textContent = 'Error requesting device orientation permission.';
+            });
+        } else {
+          window.addEventListener('deviceorientation', handleTilt);
+        }
       }
       tiltButton.addEventListener('click', startTiltTest);
 
