@@ -57,9 +57,10 @@
       margin-bottom: 10px;
     }
     /* Points balance styled in blue and bold */
-    /* (Now updated so "Power" is white and "Points: X" is blue) */
     #pointsCounter {
       font-size: 1.5rem;
+      color: #0091EA;
+      font-weight: bold;
       margin-bottom: 10px;
     }
     /* Shake progress bar container (horizontal) */
@@ -158,6 +159,35 @@
     /* Additional classes for points counter text formatting */
     .power-white { color: #ffffff; }
     .points-blue { color: #0091EA; }
+    /* --- NEW: Overlay for user tap prompt --- */
+    /* Added below the buttons container */
+    #tapOverlay {
+      display: none; 
+      position: fixed; 
+      top: 0; 
+      left: 0; 
+      width: 100%; 
+      height: 100%; 
+      background: rgba(0,0,0,0.7); 
+      z-index: 100; 
+      text-align: center; 
+      padding-top: 40vh; 
+      color: #ffffff; 
+      font-size: 1.8rem;
+    }
+    #tapOverlay #tapMessage {
+      display: inline-block; 
+      padding: 20px 40px; 
+      border: 2px solid #0091EA; 
+      border-radius: 10px; 
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%   { transform: scale(1); opacity: 1; }
+      50%  { transform: scale(1.1); opacity: 0.7; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    /* --- END NEW: Overlay --- */
   </style>
 </head>
 <body>
@@ -186,6 +216,13 @@
 
   <!-- Arrow element for swipe prompt -->
   <div id="arrow">⬆️</div>
+  
+  <!-- NEW: Tap overlay element -->
+  <!-- Added at approximately line 125 -->
+  <div id="tapOverlay">
+    <div id="tapMessage">Tap anywhere to continue</div>
+  </div>
+  <!-- END NEW -->
 
   <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -195,6 +232,7 @@
       let pointsCounterDiv = document.getElementById('pointsCounter');
       const centerDisplay = document.getElementById('centerDisplay');
       const arrowDiv = document.getElementById('arrow');
+      const tapOverlay = document.getElementById('tapOverlay');
 
       /* Global sensor data variables */
       let devicemotionText = '';
@@ -223,7 +261,6 @@
       let totalPoints = 0;
       function updatePointsCounter() {
         if (pointsCounterDiv) {
-          // Update points text with "Power" in white and "Points: X" in blue.
           pointsCounterDiv.innerHTML = '<span class="power-white">Power</span><span class="points-blue">Points: ' + totalPoints + '</span>';
         }
       }
@@ -287,6 +324,17 @@
         showSuccessScreen(contentHTML);
       }
 
+      // NEW: Function to show the tap overlay
+      // Added at approximately line 200
+      function showTapOverlay() {
+        tapOverlay.style.display = 'block';
+        tapOverlay.addEventListener('click', function dismissOverlay() {
+          tapOverlay.style.display = 'none';
+          tapOverlay.removeEventListener('click', dismissOverlay);
+        });
+      }
+      // End NEW
+
       // Gesture Test Code
 
       /* 1. Shake */
@@ -295,9 +343,7 @@
       let shakeMotionListener = null;
       let shakeTimeout = null;
       let shakeStartTime = null; // For continuous shaking duration tracking
-      // <<< Threshold setting: The following line defines the shake acceleration threshold.
       const shakeAccelerationThreshold = 3; // m/s² (Reduced threshold for easier shake detection)
-      // >>>
       const shakeListeningTime = 10000; // 10 seconds overall
       const requiredShakeDuration = 3000; // 3 seconds required continuous shake
 
@@ -382,6 +428,8 @@
           shakeMotionListener = handleShakeMotion;
           window.addEventListener('devicemotion', shakeMotionListener);
         }
+        // NEW: Show the tap overlay after 2 seconds to help dismiss Chrome’s popup.
+        setTimeout(showTapOverlay, 2000);
         shakeTimeout = setTimeout(() => {
           stopShakeListening();
           if (!shakeDetected) {
@@ -431,7 +479,7 @@
         sensorReadingsDiv = document.getElementById('sensorReadings');
         messageDiv = document.getElementById('message');
         pointsCounterDiv = document.getElementById('pointsCounter');
-        // Request permission for device orientation similar to the shake test
+        // NEW: Request permission for device orientation before starting tilt test.
         if (typeof DeviceOrientationEvent !== 'undefined' &&
             typeof DeviceOrientationEvent.requestPermission === 'function') {
           DeviceOrientationEvent.requestPermission()
