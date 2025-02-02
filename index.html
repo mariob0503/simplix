@@ -217,7 +217,6 @@
   <div id="arrow">⬆️</div>
   
   <!-- NEW: Tap overlay element -->
-  <!-- Added at approximately line 125 -->
   <div id="tapOverlay">
     <div id="tapMessage">Tap anywhere to continue</div>
   </div>
@@ -226,10 +225,11 @@
   <script>
     // NEW: Device detection & calibration (moved into script)
     let isAndroid = /Android/i.test(navigator.userAgent);
-    // Further reduce shake threshold by 50% for Android (from 1.5 to 1.0 m/s²)
-    let calibratedShakeThreshold = isAndroid ? 1.0 : 3;
-    // Lower the required tilt difference for Android from 90° to 45° (iPhone remains at 90°)
-    let requiredTiltDifference = isAndroid ? 45 : 90;
+    // Further reduce shake threshold by 50% for Android (from 1.0 to 0.5 m/s²)
+    let calibratedShakeThreshold = isAndroid ? 0.5 : 3;
+    // For tilt, increase the required difference for Android (making it half as sensitive)
+    // from 45° (previously) to 90° for Android (iPhone remains at 90°).
+    let requiredTiltDifference = isAndroid ? 90 : 90;
     // END NEW
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -472,11 +472,11 @@
           }
         }
       }
-      // For Android devices, use devicemotion to compute tilt.
+      // For Android, use the devicemotion event to compute tilt.
       function handleTiltFromMotion(event) {
         let accIG = event.accelerationIncludingGravity;
         if (!accIG) return;
-        // Compute tilt angle from the y and z components.
+        // Compute tilt angle using arctan2 of y and z.
         let tiltAngle = Math.atan2(accIG.y, accIG.z) * (180 / Math.PI);
         if (tiltBaseline === null) {
           tiltBaseline = tiltAngle;
