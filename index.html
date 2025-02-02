@@ -311,4 +311,266 @@
 
       // Shake Success: Show a shaking protein bottle for 3 seconds.
       function showShakeSuccessScreen() {
-        const contentHTML = "<div style='font-size:1.5r
+        const contentHTML = "<div style='font-size:1.5rem; color:#0091EA; font-weight:bold; margin-bottom:10px;'>PowerPoints taken!</div>" +
+          "<div id='shakeAnimation' style='font-size:1.5rem; color:#ffffff; text-align:center; padding:20px;'>🥤</div>";
+        showSuccessScreen(contentHTML);
+        const shakeElement = document.getElementById('shakeAnimation');
+        shakeElement.style.animation = "shake 0.5s infinite";
+        setTimeout(() => {
+          shakeElement.style.animation = "";
+        }, 3000);
+      }
+      function showTiltSuccessScreen() {
+        const contentHTML = "<div style='font-size:1.5rem; color:#0091EA; font-weight:bold; margin-bottom:10px;'>PowerPoints taken!</div>" +
+          "<div style='font-size:1.5rem; color:#ffffff; text-align:center; padding:20px;'>🎈🎈🎈<br>Tilt Mastery Achieved!</div>";
+        showSuccessScreen(contentHTML);
+      }
+      function showSwipeSuccessScreen() {
+        const contentHTML = "<div style='font-size:1.5rem; color:#0091EA; font-weight:bold; margin-bottom:10px;'>PowerPoints taken!</div>" +
+          "<div style='font-size:1.5rem; color:#ffffff; text-align:center; padding:20px;'>⬆️⬆️⬆️<br>Speedy Swipe Success!</div>";
+        showSuccessScreen(contentHTML);
+      }
+
+      // NEW: Function to show the tap overlay
+      function showTapOverlay() {
+        tapOverlay.style.display = 'block';
+        tapOverlay.addEventListener('click', function dismissOverlay() {
+          tapOverlay.style.display = 'none';
+          tapOverlay.removeEventListener('click', dismissOverlay);
+        });
+      }
+      // End NEW
+
+      // Gesture Test Code
+
+      /* 1. Shake */
+      const shakeButton = document.getElementById('shakeButton');
+      let shakeDetected = false;
+      let shakeMotionListener = null;
+      let shakeTimeout = null;
+      let shakeStartTime = null; // For continuous shaking duration tracking
+      const shakeListeningTime = 10000; // 10 seconds overall
+      const requiredShakeDuration = 3000; // 3 seconds required continuous shake
+
+      function handleShakeMotion(event) {
+        let acc = event.acceleration;
+        if (!acc || (acc.x === null && acc.y === null && acc.z === null)) {
+          acc = event.accelerationIncludingGravity;
+        }
+        const x = acc.x !== null ? formatValue(acc.x) : 0;
+        const y = acc.y !== null ? formatValue(acc.y) : 0;
+        const z = acc.z !== null ? formatValue(acc.z) : 0;
+        const magnitude = Math.sqrt(x * x + y * y + z * z);
+        if (magnitude > calibratedShakeThreshold) {
+          if (shakeStartTime === null) {
+            shakeStartTime = Date.now();
+          }
+          let elapsed = Date.now() - shakeStartTime;
+          let progressElem = document.getElementById('shakeProgress');
+          if (progressElem) {
+            let percent = Math.min(100, (elapsed / requiredShakeDuration) * 100);
+            progressElem.style.width = percent + '%';
+          }
+          if (elapsed >= requiredShakeDuration && !shakeDetected) {
+            shakeDetected = true;
+            if (shakeTimeout) clearTimeout(shakeTimeout);
+            stopShakeListening();
+            addPoints(10);
+            showShakeSuccessScreen();
+          }
+        } else {
+          shakeStartTime = null;
+          let progressElem = document.getElementById('shakeProgress');
+          if (progressElem) {
+            progressElem.style.width = '0%';
+          }
+        }
+      }
+      function stopShakeListening() {
+        if (shakeMotionListener) {
+          window.removeEventListener('devicemotion', shakeMotionListener);
+          shakeMotionListener = null;
+        }
+        if (shakeTimeout) {
+          clearTimeout(shakeTimeout);
+          shakeTimeout = null;
+        }
+      }
+      function startShakeTest() {
+        shakeDetected = false;
+        shakeStartTime = null;
+        centerDisplay.innerHTML = 
+          '<div id="sensorReadings">Waiting for sensor data...</div>' +
+          '<div id="message">Shake: Shake your phone like you’re lifting heavy weights!</div>' +
+          '<div id="pointsCounter">PowerPoints: ' + totalPoints + '</div>' +
+          '<div id="shakeProgressContainer">' +
+            '<div id="shakeProgress"></div>' +
+          '</div>';
+        sensorReadingsDiv = document.getElementById('sensorReadings');
+        messageDiv = document.getElementById('message');
+        pointsCounterDiv = document.getElementById('pointsCounter');
+        if (!sensorListenersAdded) {
+          window.addEventListener('devicemotion', sensorDataUpdate);
+          window.addEventListener('deviceorientation', sensorOrientationUpdate);
+          sensorListenersAdded = true;
+        }
+        if (typeof DeviceMotionEvent !== 'undefined' &&
+            typeof DeviceMotionEvent.requestPermission === 'function') {
+          DeviceMotionEvent.requestPermission()
+            .then(response => {
+              if (response === 'granted') {
+                shakeMotionListener = handleShakeMotion;
+                window.addEventListener('devicemotion', shakeMotionListener);
+              } else {
+                messageDiv.textContent = 'Permission not granted for motion sensors.';
+              }
+            })
+            .catch(err => {
+              console.error(err);
+              messageDiv.textContent = 'Error requesting motion sensor permission.';
+            });
+        } else {
+          shakeMotionListener = handleShakeMotion;
+          window.addEventListener('devicemotion', shakeMotionListener);
+        }
+        // NEW: Show the tap overlay after 5 seconds to help dismiss Chrome’s popup.
+        setTimeout(showTapOverlay, 5000);
+        shakeTimeout = setTimeout(() => {
+          stopShakeListening();
+          if (!shakeDetected) {
+            if (shakeStartTime !== null && (Date.now() - shakeStartTime < requiredShakeDuration)) {
+              messageDiv.textContent = 'Shake harder!';
+            } else {
+              messageDiv.textContent = 'No power shake detected. Try again!';
+            }
+          }
+        }, shakeListeningTime);
+      }
+      shakeButton.addEventListener('click', startShakeTest);
+
+      /* 2. Tilt */
+      const tiltButton = document.getElementById('tiltButton');
+      let tiltBaseline = null;
+      // For non-Android devices, we use the deviceorientation event:
+      function handleTilt(event) {
+        const currentBeta = event.beta !== null ? formatValue(event.beta) : 0;
+        if (tiltBaseline === null) {
+          tiltBaseline = currentBeta;
+          messageDiv.textContent = "Tilt: Start tilting – change your angle by " + requiredTiltDifference + "°!";
+        } else {
+          let diff = Math.abs(currentBeta - tiltBaseline);
+          let progressPercent = Math.min(100, (diff / requiredTiltDifference) * 100);
+          let tiltProgressElem = document.getElementById('tiltProgress');
+          if (tiltProgressElem) {
+            tiltProgressElem.style.height = progressPercent + '%';
+          }
+          if (diff >= requiredTiltDifference) {
+            addPoints(15);
+            showTiltSuccessScreen();
+            window.removeEventListener('deviceorientation', handleTilt);
+            tiltBaseline = null;
+          }
+        }
+      }
+      // For Android devices, use devicemotion to compute tilt.
+      function handleTiltFromMotion(event) {
+        let accIG = event.accelerationIncludingGravity;
+        if (!accIG) return;
+        // Compute tilt angle from the y and z components.
+        let tiltAngle = Math.atan2(accIG.y, accIG.z) * (180 / Math.PI);
+        if (tiltBaseline === null) {
+          tiltBaseline = tiltAngle;
+          messageDiv.textContent = "Tilt: Start tilting – change your angle by " + requiredTiltDifference + "°!";
+        } else {
+          let diff = Math.abs(tiltAngle - tiltBaseline);
+          let progressPercent = Math.min(100, (diff / requiredTiltDifference) * 100);
+          let tiltProgressElem = document.getElementById('tiltProgress');
+          if (tiltProgressElem) {
+            tiltProgressElem.style.height = progressPercent + '%';
+          }
+          if (diff >= requiredTiltDifference) {
+            addPoints(15);
+            showTiltSuccessScreen();
+            window.removeEventListener('devicemotion', handleTiltFromMotion);
+            tiltBaseline = null;
+          }
+        }
+      }
+      function startTiltTest() {
+        tiltBaseline = null;
+        centerDisplay.innerHTML =
+          '<div id="sensorReadings">Waiting for sensor data...</div>' +
+          '<div id="message">Tilt: Tilt your phone so your beta angle changes by ' + requiredTiltDifference + '°!</div>' +
+          '<div id="pointsCounter">PowerPoints: ' + totalPoints + '</div>' +
+          '<div id="tiltProgressContainer">' +
+            '<div id="tiltProgress"></div>' +
+          '</div>';
+        sensorReadingsDiv = document.getElementById('sensorReadings');
+        messageDiv = document.getElementById('message');
+        pointsCounterDiv = document.getElementById('pointsCounter');
+        // For Android, use the devicemotion event to compute tilt.
+        if (isAndroid) {
+          window.addEventListener('devicemotion', handleTiltFromMotion);
+        } else {
+          // For non-Android devices, use deviceorientation.
+          window.addEventListener('deviceorientation', handleTilt);
+        }
+      }
+      tiltButton.addEventListener('click', startTiltTest);
+
+      /* 3. Swipe */
+      const swipeButton = document.getElementById('swipeButton');
+      let touchStartY = null;
+      let touchEndY = null;
+      function handleTouchStart(e) {
+        touchStartY = e.changedTouches[0].screenY;
+      }
+      function handleTouchEnd(e) {
+        touchEndY = e.changedTouches[0].screenY;
+        const deltaY = touchStartY - touchEndY;
+        if (deltaY > 50) {
+          addPoints(20);
+          showSwipeSuccessScreen();
+        } else {
+          messageDiv.textContent = 'Swipe too short. Push harder!';
+        }
+        document.removeEventListener('touchstart', handleTouchStart);
+        document.removeEventListener('touchend', handleTouchEnd);
+      }
+      function startSwipeTest() {
+        messageDiv.textContent = "Swipe: Swipe up like you're running up stairs for a cardio boost!";
+        arrowDiv.style.display = 'block';
+        arrowDiv.classList.add('animate-arrow');
+        arrowDiv.addEventListener('animationend', () => {
+          arrowDiv.classList.remove('animate-arrow');
+        }, {once: true});
+        document.addEventListener('touchstart', handleTouchStart);
+        document.addEventListener('touchend', handleTouchEnd);
+      }
+      swipeButton.addEventListener('click', startSwipeTest);
+
+      /* 4. Reset */
+      const resetButton = document.getElementById('resetButton');
+      function resetDisplay() {
+        centerDisplay.innerHTML =
+          '<div id="sensorReadings">Waiting for sensor data...</div>' +
+          '<div id="message"></div>' +
+          '<div id="pointsCounter">PowerPoints: ' + totalPoints + '</div>';
+        sensorReadingsDiv = document.getElementById('sensorReadings');
+        messageDiv = document.getElementById('message');
+        pointsCounterDiv = document.getElementById('pointsCounter');
+      }
+      resetButton.addEventListener('click', () => {
+        messageDiv.textContent = "Ready for the next round of gym action!";
+        arrowDiv.style.display = 'none';
+        stopShakeListening();
+        window.removeEventListener('deviceorientation', handleTilt);
+        window.removeEventListener('devicemotion', handleTiltFromMotion);
+        document.removeEventListener('touchstart', handleTouchStart);
+        document.removeEventListener('touchend', handleTouchEnd);
+        resetDisplay();
+      });
+    });
+  </script>
+</body>
+</html>
