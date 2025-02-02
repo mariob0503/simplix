@@ -59,8 +59,7 @@
     /* Points balance styled in blue and bold */
     #pointsCounter {
       font-size: 1.5rem;
-      color: #0091EA;
-      font-weight: bold;
+      /* Initially, we'll update the inner HTML in script to format "Power" (white) and "Points: X" (blue) */
       margin-bottom: 10px;
     }
     /* Shake progress bar container (horizontal) */
@@ -187,15 +186,6 @@
       100% { transform: scale(1); opacity: 1; }
     }
     /* END NEW */
-    
-    /* NEW: Device detection & calibration */
-    /* (Line approx. 45) */
-    let isAndroid = /Android/i.test(navigator.userAgent);
-    // If Android, use a lower shake threshold and boost tilt progress.
-    let shakeAccelerationThreshold = isAndroid ? 1.5 : 3;
-    let tiltMultiplier = isAndroid ? 2 : 1;
-    /* END NEW */
-    
   </style>
 </head>
 <body>
@@ -233,6 +223,13 @@
   <!-- END NEW -->
 
   <script>
+    // NEW: Device detection & calibration (moved into script; approximately line 5)
+    let isAndroid = /Android/i.test(navigator.userAgent);
+    // Use a lower shake threshold for Android and boost tilt progress.
+    let calibratedShakeThreshold = isAndroid ? 1.5 : 3;
+    let tiltMultiplier = isAndroid ? 2 : 1;
+    // End NEW
+
     document.addEventListener('DOMContentLoaded', () => {
       // Get references to elements.
       let sensorReadingsDiv = document.getElementById('sensorReadings');
@@ -333,7 +330,6 @@
       }
 
       // NEW: Function to show the tap overlay
-      // Added at approximately line 200
       function showTapOverlay() {
         tapOverlay.style.display = 'block';
         tapOverlay.addEventListener('click', function dismissOverlay() {
@@ -351,8 +347,8 @@
       let shakeMotionListener = null;
       let shakeTimeout = null;
       let shakeStartTime = null; // For continuous shaking duration tracking
-      // Use calibrated threshold (from device detection)
-      // shakeAccelerationThreshold is set above (1.5 for Android, 3 for others)
+      // Use calibrated threshold from device detection:
+      // calibratedShakeThreshold is set above (1.5 for Android, 3 for others)
       const shakeListeningTime = 10000; // 10 seconds overall
       const requiredShakeDuration = 3000; // 3 seconds required continuous shake
 
@@ -365,7 +361,7 @@
         const y = acc.y !== null ? formatValue(acc.y) : 0;
         const z = acc.z !== null ? formatValue(acc.z) : 0;
         const magnitude = Math.sqrt(x * x + y * y + z * z);
-        if (magnitude > shakeAccelerationThreshold) {
+        if (magnitude > calibratedShakeThreshold) {
           if (shakeStartTime === null) {
             shakeStartTime = Date.now();
           }
