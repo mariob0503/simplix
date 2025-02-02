@@ -59,7 +59,8 @@
     /* Points balance styled in blue and bold */
     #pointsCounter {
       font-size: 1.5rem;
-      /* Initially, we'll update the inner HTML in script to format "Power" (white) and "Points: X" (blue) */
+      color: #0091EA;
+      font-weight: bold;
       margin-bottom: 10px;
     }
     /* Shake progress bar container (horizontal) */
@@ -223,12 +224,13 @@
   <!-- END NEW -->
 
   <script>
-    // NEW: Device detection & calibration (moved into script; approximately line 5)
+    // NEW: Device detection & calibration (moved into script)
     let isAndroid = /Android/i.test(navigator.userAgent);
-    // Use a lower shake threshold for Android and boost tilt progress.
-    let calibratedShakeThreshold = isAndroid ? 1.5 : 3;
-    let tiltMultiplier = isAndroid ? 2 : 1;
-    // End NEW
+    // Further reduce shake threshold by 50% for Android (from 1.5 to 1.0 m/s²)
+    let calibratedShakeThreshold = isAndroid ? 1.0 : 3;
+    // Lower the required tilt difference for Android from 60° to 45° (iPhone remains 90°)
+    let requiredTiltDifference = isAndroid ? 45 : 90;
+    // END NEW
 
     document.addEventListener('DOMContentLoaded', () => {
       // Get references to elements.
@@ -347,8 +349,6 @@
       let shakeMotionListener = null;
       let shakeTimeout = null;
       let shakeStartTime = null; // For continuous shaking duration tracking
-      // Use calibrated threshold from device detection:
-      // calibratedShakeThreshold is set above (1.5 for Android, 3 for others)
       const shakeListeningTime = 10000; // 10 seconds overall
       const requiredShakeDuration = 3000; // 3 seconds required continuous shake
 
@@ -455,17 +455,16 @@
         const currentBeta = event.beta !== null ? formatValue(event.beta) : 0;
         if (tiltBaseline === null) {
           tiltBaseline = currentBeta;
-          messageDiv.textContent = "Tilt: Start tilting – change your angle by 90°!";
+          messageDiv.textContent = "Tilt: Start tilting – change your angle by " + requiredTiltDifference + "°!";
         } else {
-          // Calculate progress toward 90° difference.
+          // Calculate progress toward the required tilt difference.
           let diff = Math.abs(currentBeta - tiltBaseline);
-          // NEW: Multiply progress by tiltMultiplier for Android devices.
-          let progressPercent = Math.min(100, (diff / 90) * 100 * tiltMultiplier);
+          let progressPercent = Math.min(100, (diff / requiredTiltDifference) * 100);
           let tiltProgressElem = document.getElementById('tiltProgress');
           if (tiltProgressElem) {
             tiltProgressElem.style.height = progressPercent + '%';
           }
-          if (diff >= 90) {
+          if (diff >= requiredTiltDifference) {
             addPoints(15);
             showTiltSuccessScreen();
             window.removeEventListener('deviceorientation', handleTilt);
@@ -477,7 +476,7 @@
         tiltBaseline = null;
         centerDisplay.innerHTML =
           '<div id="sensorReadings">Waiting for sensor data...</div>' +
-          '<div id="message">Tilt: Tilt your phone so your beta angle changes by 90°!</div>' +
+          '<div id="message">Tilt: Tilt your phone so your beta angle changes by ' + requiredTiltDifference + '°!</div>' +
           '<div id="pointsCounter">PowerPoints: ' + totalPoints + '</div>' +
           '<div id="tiltProgressContainer">' +
             '<div id="tiltProgress"></div>' +
