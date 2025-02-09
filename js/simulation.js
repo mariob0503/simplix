@@ -66,33 +66,36 @@ var Simulation = (function () {
     // Set up GUI (includes sensor metrics toggle)
     setupGUI();
 
-    // Bar overlay: create barImage and maxi2Image
-    // bar.png will rotate slowly and fade out after one rotation (10s)
+    // BAR IMAGE: bar.png now centered exactly in the middle.
     barImage = document.createElement("img");
     barImage.src = "textures/bar.png";
     barImage.style.position = "absolute";
-    barImage.style.top = "25%";
+    barImage.style.top = "50%";             // Changed to 50% for vertical centering
     barImage.style.left = "50%";
-    barImage.style.transform = "translate(-50%, 0)";
+    barImage.style.transform = "translate(-50%, -50%)";  // Center exactly
     barImage.style.height = "50vh";
     barImage.style.width = "auto";
-    // Apply CSS animation defined in index.html: rotateFadeOut (10s, forwards)
+    // Apply CSS animation: rotateFadeOut (10s, forwards)
     barImage.style.animation = "rotateFadeOut 10s forwards";
     document.body.appendChild(barImage);
 
-    // maxi2.png will fade in and rotate infinitely, starting after 10s delay
+    // MAXI2 IMAGE: maxi2.png centered exactly in the middle.
     maxi2Image = document.createElement("img");
-    maxi2Image.src = "textures/maxi2.png"; // Ensure the file is named maxi2.png and is in the textures folder.
+    maxi2Image.src = "textures/maxi2.png"; // Ensure this file exists in the textures folder.
     maxi2Image.style.position = "absolute";
-    maxi2Image.style.top = "25%";
-    maxi2Image.style.left = "50%";
-    maxi2Image.style.transform = "translate(-50%, 0)";
+    maxi2Image.style.top = "50%";            // Center vertically
+    maxi2Image.style.left = "50%";           // Center horizontally
+    maxi2Image.style.transform = "translate(-50%, -50%)";
     maxi2Image.style.height = "50vh";
     maxi2Image.style.width = "auto";
-    maxi2Image.style.opacity = "0"; // initially hidden
-    // Set animation with a 10s delay then infinite rotation with fade in
-    maxi2Image.style.animation = "fadeInRotateInfinite 10s linear infinite";
-    maxi2Image.style.animationDelay = "10s";
+    maxi2Image.style.opacity = "0";          // Initially hidden
+    /* 
+       Apply two animations:
+       - "fadeIn" runs for 8s to transition opacity from 0 to 1.
+       - "infiniteRotate" starts with an 8s delay and then rotates infinitely.
+       (These animations are defined in the index.html's CSS.)
+    */
+    maxi2Image.style.animation = "fadeIn 8s forwards, infiniteRotate 8s linear 8s infinite";
     document.body.appendChild(maxi2Image);
 
     // Clock and window resize listener
@@ -132,7 +135,7 @@ var Simulation = (function () {
     scene.add(particleSystem);
   }
 
-  // UPDATED generateSprite() function to use light blue colors
+  // Updated generateSprite() function to use light blue colors
   function generateSprite() {
     var canvas = document.createElement("canvas");
     canvas.width = 64;
@@ -208,7 +211,7 @@ var Simulation = (function () {
     composer.setSize(window.innerWidth, window.innerHeight);
   }
 
-  // UPDATED updateParticles() to reset particles if they move too far (ensuring continuous animation)
+  // Updated updateParticles() to reset particles if they move too far (ensuring continuous animation)
   function updateParticles(delta) {
     var positions = particleSystem.geometry.attributes.position.array;
     for (var i = 0; i < particleCount; i++) {
