@@ -15,7 +15,7 @@ document.addEventListener("DOMContentLoaded", function () {
     totalPoints += pts;
   }
 
-  // Hide the Lift & Earn UI elements so that the simulation can be displayed
+  // Hide the Lift & Earn UI elements so the simulation can be displayed
   function hideLiftEarnUI() {
     var flag = document.getElementById("flag");
     var center = document.getElementById("centerDisplay");
@@ -31,6 +31,51 @@ document.addEventListener("DOMContentLoaded", function () {
   function showSimulation() {
     hideLiftEarnUI();
     Simulation.start();
+  }
+
+  // Request sensor permission if needed (for iOS and similar)
+  function requestMotionPermission(callback) {
+    if (typeof DeviceMotionEvent !== "undefined" &&
+        typeof DeviceMotionEvent.requestPermission === "function") {
+      DeviceMotionEvent.requestPermission()
+        .then(function (response) {
+          if (response === "granted") {
+            callback();
+          } else {
+            centerDisplay.innerHTML =
+              "<div style='font-size:1.3rem;'>Sensor permission not granted. Please allow sensor access.</div>";
+          }
+        })
+        .catch(function (error) {
+          console.error(error);
+          centerDisplay.innerHTML =
+            "<div style='font-size:1.3rem;'>Error requesting sensor permission.</div>";
+        });
+    } else {
+      callback();
+    }
+  }
+
+  function requestOrientationPermission(callback) {
+    if (typeof DeviceOrientationEvent !== "undefined" &&
+        typeof DeviceOrientationEvent.requestPermission === "function") {
+      DeviceOrientationEvent.requestPermission()
+        .then(function (response) {
+          if (response === "granted") {
+            callback();
+          } else {
+            centerDisplay.innerHTML =
+              "<div style='font-size:1.3rem;'>Orientation permission not granted. Please allow sensor access.</div>";
+          }
+        })
+        .catch(function (error) {
+          console.error(error);
+          centerDisplay.innerHTML =
+            "<div style='font-size:1.3rem;'>Error requesting orientation permission.</div>";
+        });
+    } else {
+      callback();
+    }
   }
 
   // Shake Test Code
@@ -52,6 +97,12 @@ document.addEventListener("DOMContentLoaded", function () {
         shakeStartTime = Date.now();
       }
       var elapsed = Date.now() - shakeStartTime;
+      // Update shake progress bar (if exists)
+      var progressElem = document.getElementById("shakeProgress");
+      if (progressElem) {
+        var percent = Math.min(100, (elapsed / requiredShakeDuration) * 100);
+        progressElem.style.width = percent + "%";
+      }
       if (elapsed >= requiredShakeDuration && !shakeDetected) {
         shakeDetected = true;
         stopShakeListening();
@@ -60,6 +111,8 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     } else {
       shakeStartTime = null;
+      var progressElem = document.getElementById("shakeProgress");
+      if (progressElem) progressElem.style.width = "0%";
     }
   }
 
@@ -76,7 +129,10 @@ document.addEventListener("DOMContentLoaded", function () {
       '<div style="font-size:1.5rem;">PowerPoints: ' + totalPoints + "</div>" +
       '<div style="width:80%; height:20px; background:#555; margin:0 auto; border-radius:10px; overflow:hidden;">' +
       '<div id="shakeProgress" style="width:0%; height:100%; background:#0091EA;"></div></div>';
-    window.addEventListener("devicemotion", handleShakeMotion);
+    // Request motion permission if needed, then add listener
+    requestMotionPermission(function () {
+      window.addEventListener("devicemotion", handleShakeMotion);
+    });
     // For Chrome: show tap overlay after 5 seconds
     setTimeout(function () {
       if (navigator.userAgent.indexOf("Chrome") !== -1) {
@@ -112,6 +168,12 @@ document.addEventListener("DOMContentLoaded", function () {
       tiltBaseline = currentBeta;
     } else {
       var diff = Math.abs(currentBeta - tiltBaseline);
+      // Update tilt progress bar
+      var tiltProgressElem = document.getElementById("tiltProgress");
+      if (tiltProgressElem) {
+        var progressPercent = Math.min(100, (diff / requiredTiltDifference) * 100);
+        tiltProgressElem.style.height = progressPercent + "%";
+      }
       if (diff >= requiredTiltDifference) {
         window.removeEventListener("deviceorientation", handleTilt);
         addPoints(15);
@@ -130,7 +192,10 @@ document.addEventListener("DOMContentLoaded", function () {
       '<div style="font-size:1.5rem;">PowerPoints: ' + totalPoints + "</div>" +
       '<div id="tiltProgressContainer" style="width:20px; height:80px; background:#555; margin:10px auto; border-radius:10px; position:relative; overflow:hidden;">' +
       '<div id="tiltProgress" style="width:100%; height:0%; background:#0091EA; position:absolute; bottom:0;"></div></div>';
-    window.addEventListener("deviceorientation", handleTilt);
+    // Request orientation permission if needed, then add listener
+    requestOrientationPermission(function () {
+      window.addEventListener("deviceorientation", handleTilt);
+    });
   }
 
   function showTiltSuccessScreen() {
@@ -143,4 +208,3 @@ document.addEventListener("DOMContentLoaded", function () {
   shakeButton.addEventListener("click", startShakeTest);
   tiltButton.addEventListener("click", startTiltTest);
 });
-
