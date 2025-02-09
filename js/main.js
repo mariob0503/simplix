@@ -3,6 +3,7 @@ document.addEventListener("DOMContentLoaded", function () {
   var centerDisplay = document.getElementById("centerDisplay");
   var shakeButton = document.getElementById("shakeButton");
   var tiltButton = document.getElementById("tiltButton");
+  var logPointsButton = document.getElementById("logPointsButton");
   var tapOverlay = document.getElementById("tapOverlay");
   var totalPoints = 0;
 
@@ -15,7 +16,7 @@ document.addEventListener("DOMContentLoaded", function () {
     totalPoints += pts;
   }
 
-  // Hide the Lift & Earn UI elements so the simulation can be displayed
+  // Hide the Lift & Earn UI elements so that the simulation can be displayed
   function hideLiftEarnUI() {
     var flag = document.getElementById("flag");
     var center = document.getElementById("centerDisplay");
@@ -207,4 +208,12 @@ document.addEventListener("DOMContentLoaded", function () {
   // Attach button event listeners
   shakeButton.addEventListener("click", startShakeTest);
   tiltButton.addEventListener("click", startTiltTest);
+  
+  // NEW: Log Points button for desktop testing triggers simulation directly
+  logPointsButton.addEventListener("click", function () {
+    centerDisplay.innerHTML =
+      "<div style='font-size:1.5rem; color:#0091EA; font-weight:bold;'>Log Points Success! Starting simulation...</div>";
+    addPoints(10); // Optionally add some points for testing
+    setTimeout(showSimulation, 1000);
+  });
 });
