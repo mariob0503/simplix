@@ -25,7 +25,7 @@
       z-index: 0;
       pointer-events: none;
     }
-    /* Flag styling with pulsating glow */
+    /* Lift & Earn Header with pulsating glow */
     #flag {
       position: absolute;
       top: 0;
@@ -33,22 +33,23 @@
       text-align: center;
       padding: 20px 0;
       z-index: 10;
-      animation: pulsate 2s infinite;
-    }
-    @keyframes pulsate {
-      0% { text-shadow: 0 0 10px rgba(0, 145, 234, 0.5); }
-      50% { text-shadow: 0 0 20px rgba(0, 145, 234, 1); }
-      100% { text-shadow: 0 0 10px rgba(0, 145, 234, 0.5); }
     }
     #flag .big-bold {
-      font-size: 2.86rem;
+      font-size: 4rem; /* Increased size */
       font-weight: bold;
+      animation: brightPulse 2s infinite;
+    }
+    @keyframes brightPulse {
+      0% { text-shadow: 0 0 20px rgba(255,255,255,0.5); }
+      50% { text-shadow: 0 0 40px rgba(255,255,255,1); }
+      100% { text-shadow: 0 0 20px rgba(255,255,255,0.5); }
     }
     #flag .subtitle {
-      font-size: 1.5rem;
+      font-size: 2rem; /* Increased size */
       margin-top: 5px;
     }
-    .blue {
+    /* The new subline: Simplix in blue, Gym Rewards in white */
+    #flag .subtitle span.blue {
       color: #0091EA;
     }
     /* Center container for messages */
@@ -119,6 +120,16 @@
       50% { transform: scale(1.1); opacity: 0.7; }
       100% { transform: scale(1); opacity: 1; }
     }
+    /* CSS animations for rotating images */
+    @keyframes rotateFadeOut {
+      0% { transform: rotate(0deg); opacity: 1; }
+      100% { transform: rotate(360deg); opacity: 0; }
+    }
+    @keyframes fadeInRotateInfinite {
+      0% { transform: rotate(0deg); opacity: 0; }
+      10% { opacity: 1; }
+      100% { transform: rotate(360deg); opacity: 1; }
+    }
   </style>
   <!-- Three.js and required libraries -->
   <script src="https://cdn.jsdelivr.net/npm/three@0.125.0/build/three.min.js"></script>
@@ -142,8 +153,8 @@
 
   <!-- Lift & Earn UI -->
   <div id="flag">
-    <div class="big-bold">Lift & <span class="blue">Earn</span></div>
-    <div class="subtitle"><span class="blue">LiftAndEarn</span> Gym Reward</div>
+    <div class="big-bold">Lift & Earn</div>
+    <div class="subtitle"><span class="blue">Simplix</span> Gym Rewards</div>
   </div>
   <div id="centerDisplay" class="initial">
     Choose your action to log your points.
