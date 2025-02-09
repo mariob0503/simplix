@@ -1,5 +1,5 @@
 var Simulation = (function () {
-  // Private variables
+  // Private variable
   var scene, camera, renderer, controls, composer, clock;
   var particleSystem, particlePositions, particleVelocities;
   var galaxySystem = null;
