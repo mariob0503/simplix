@@ -104,10 +104,7 @@ var Simulation = (function () {
       particleVelocities[i * 3 + 1] = speed * Math.sin(phi) * Math.sin(theta);
       particleVelocities[i * 3 + 2] = speed * Math.cos(phi);
     }
-    geometry.setAttribute(
-      "position",
-      new THREE.BufferAttribute(particlePositions, 3)
-    );
+    geometry.setAttribute("position", new THREE.BufferAttribute(particlePositions, 3));
     var sprite = generateSprite();
     var material = new THREE.PointsMaterial({
       size: 2,
@@ -122,7 +119,7 @@ var Simulation = (function () {
     scene.add(particleSystem);
   }
 
-  // Updated generateSprite() function to use light blue colors
+  // UPDATED generateSprite() function to use light blue colors
   function generateSprite() {
     var canvas = document.createElement("canvas");
     canvas.width = 64;
@@ -133,7 +130,7 @@ var Simulation = (function () {
     // and transitions to light blue tones.
     var gradient = context.createRadialGradient(32, 32, 0, 32, 32, 32);
     gradient.addColorStop(0, "rgba(255, 255, 255, 1)");        // white center
-    gradient.addColorStop(0.2, "rgba(173, 216, 230, 0.8)");      // light blue (lightblue)
+    gradient.addColorStop(0.2, "rgba(173, 216, 230, 0.8)");      // light blue
     gradient.addColorStop(0.4, "rgba(135, 206, 250, 0.6)");      // light sky blue
     gradient.addColorStop(1, "rgba(0, 0, 0, 0)");                // transparent edge
 
@@ -198,6 +195,7 @@ var Simulation = (function () {
     composer.setSize(window.innerWidth, window.innerHeight);
   }
 
+  // UPDATED updateParticles() to reset particles if they move too far (continuing the animation)
   function updateParticles(delta) {
     var positions = particleSystem.geometry.attributes.position.array;
     for (var i = 0; i < particleCount; i++) {
@@ -205,6 +203,19 @@ var Simulation = (function () {
       positions[index] += particleVelocities[index] * params.expansionSpeed * delta;
       positions[index + 1] += particleVelocities[index + 1] * params.expansionSpeed * delta;
       positions[index + 2] += particleVelocities[index + 2] * params.expansionSpeed * delta;
+      
+      // Calculate the distance from the origin
+      var distance = Math.sqrt(
+        positions[index] * positions[index] +
+        positions[index + 1] * positions[index + 1] +
+        positions[index + 2] * positions[index + 2]
+      );
+      // Reset the particle if it has moved too far
+      if (distance > 500) {
+         positions[index] = 0;
+         positions[index + 1] = 0;
+         positions[index + 2] = 0;
+      }
     }
     particleSystem.geometry.attributes.position.needsUpdate = true;
   }
