@@ -15,7 +15,17 @@
       overflow: hidden;
       color: #ffffff;
     }
-    /* Flag styling at the top */
+    /* Background canvas for animated particles */
+    #bgCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      pointer-events: none;
+    }
+    /* Flag styling with pulsating glow */
     #flag {
       position: absolute;
       top: 0;
@@ -23,6 +33,12 @@
       text-align: center;
       padding: 20px 0;
       z-index: 10;
+      animation: pulsate 2s infinite;
+    }
+    @keyframes pulsate {
+      0% { text-shadow: 0 0 10px rgba(0, 145, 234, 0.5); }
+      50% { text-shadow: 0 0 20px rgba(0, 145, 234, 1); }
+      100% { text-shadow: 0 0 10px rgba(0, 145, 234, 0.5); }
     }
     #flag .big-bold {
       font-size: 2.86rem;
@@ -68,9 +84,10 @@
       font-size: 1.1rem;
       background-color: #0091EA;
       color: #ffffff;
-      border: none;
+      border: 1px solid rgba(255,255,255,0.7);
       border-radius: 5px;
       cursor: pointer;
+      box-shadow: 0 0 10px rgba(255,255,255,0.5);
     }
     button:active {
       transform: scale(0.98);
@@ -120,6 +137,9 @@
   <script src="js/main.js"></script>
 </head>
 <body>
+  <!-- Background canvas for animated particles -->
+  <canvas id="bgCanvas"></canvas>
+
   <!-- Lift & Earn UI -->
   <div id="flag">
     <div class="big-bold">Lift & <span class="blue">Earn</span></div>
@@ -132,9 +152,60 @@
   <div class="buttons">
     <button id="shakeButton">Shake</button>
     <button id="tiltButton">Tilt</button>
+    <button id="logPointsButton">Log Points</button>
   </div>
   <div id="tapOverlay">
     <div id="tapMessage">Tap anywhere to continue</div>
   </div>
+  
+  <script>
+    // Background Particle Animation on the start page
+    (function(){
+      var canvas = document.getElementById("bgCanvas");
+      var ctx = canvas.getContext("2d");
+      var particles = [];
+      var numParticles = 100;
+      
+      function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+      window.addEventListener("resize", resize);
+      resize();
+      
+      // Particle constructor
+      function Particle() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.radius = Math.random() * 2 + 1;
+        this.speedX = Math.random() * 0.5 - 0.25;
+        this.speedY = Math.random() * 0.5 - 0.25;
+        this.alpha = Math.random();
+      }
+      
+      for (var i = 0; i < numParticles; i++) {
+        particles.push(new Particle());
+      }
+      
+      function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        for (var i = 0; i < particles.length; i++) {
+          var p = particles[i];
+          p.x += p.speedX;
+          p.y += p.speedY;
+          if (p.x < 0) p.x = canvas.width;
+          if (p.x > canvas.width) p.x = 0;
+          if (p.y < 0) p.y = canvas.height;
+          if (p.y > canvas.height) p.y = 0;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2, false);
+          ctx.fillStyle = "rgba(173,216,230," + p.alpha + ")";
+          ctx.fill();
+        }
+        requestAnimationFrame(animate);
+      }
+      animate();
+    })();
+  </script>
 </body>
 </html>
