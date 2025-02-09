@@ -1,5 +1,5 @@
 var Simulation = (function () {
-  // Private variable
+  // Private variables
   var scene, camera, renderer, controls, composer, clock;
   var particleSystem, particlePositions, particleVelocities;
   var galaxySystem = null;
@@ -63,7 +63,7 @@ var Simulation = (function () {
     // Create particle system
     createParticleSystem();
 
-    // Set up GUI (includes a sensor metrics toggle)
+    // Set up GUI (includes sensor metrics toggle)
     setupGUI();
 
     // Bar overlay: starts at opacity 0 and fades in over 4 seconds after 3 seconds delay
@@ -82,7 +82,7 @@ var Simulation = (function () {
       barImage.style.opacity = "1";
     }, 3000);
 
-    // Clock and resize listener
+    // Clock and window resize listener
     clock = new THREE.Clock();
     window.addEventListener("resize", onWindowResize, false);
     nebulaFadeStartTime = clock.elapsedTime;
@@ -122,18 +122,24 @@ var Simulation = (function () {
     scene.add(particleSystem);
   }
 
+  // Updated generateSprite() function to use light blue colors
   function generateSprite() {
     var canvas = document.createElement("canvas");
     canvas.width = 64;
     canvas.height = 64;
     var context = canvas.getContext("2d");
+
+    // Create a radial gradient that starts white in the center
+    // and transitions to light blue tones.
     var gradient = context.createRadialGradient(32, 32, 0, 32, 32, 32);
-    gradient.addColorStop(0, "rgba(255, 255, 255, 1)");
-    gradient.addColorStop(0.2, "rgba(255, 200, 200, 0.8)");
-    gradient.addColorStop(0.4, "rgba(200, 100, 100, 0.6)");
-    gradient.addColorStop(1, "rgba(0, 0, 0, 0)");
+    gradient.addColorStop(0, "rgba(255, 255, 255, 1)");        // white center
+    gradient.addColorStop(0.2, "rgba(173, 216, 230, 0.8)");      // light blue (lightblue)
+    gradient.addColorStop(0.4, "rgba(135, 206, 250, 0.6)");      // light sky blue
+    gradient.addColorStop(1, "rgba(0, 0, 0, 0)");                // transparent edge
+
     context.fillStyle = gradient;
     context.fillRect(0, 0, 64, 64);
+
     var texture = new THREE.CanvasTexture(canvas);
     texture.minFilter = THREE.LinearFilter;
     return texture;
@@ -225,13 +231,12 @@ var Simulation = (function () {
   // Public API
   return {
     start: function () {
-      // (Optionally, hide any previous UI elements before starting.)
+      // Optionally hide any previous UI elements before starting the simulation
       init();
       animateSimulation();
     },
     stop: function () {
-      // (Optional: implement stopping if needed.)
+      // (Optional: implement stopping/cleaning up the simulation.)
     },
   };
 })();
-
