@@ -6,7 +6,7 @@ var Simulation = (function () {
   var nebula = null;
   var particleCount = 20000;
   var params;
-  var barImage;
+  var barImage, maxi2Image;
   var nebulaFadeStartTime = 0;
   var nebulaFadeDuration = 3;
   var nebulaTargetOpacity = 0.7;
@@ -66,21 +66,34 @@ var Simulation = (function () {
     // Set up GUI (includes sensor metrics toggle)
     setupGUI();
 
-    // Bar overlay: starts at opacity 0 and fades in over 4 seconds after 3 seconds delay
+    // Bar overlay: create barImage and maxi2Image
+    // bar.png will rotate slowly and fade out after one rotation (10s)
     barImage = document.createElement("img");
     barImage.src = "textures/bar.png";
-    barImage.style.opacity = "0";
     barImage.style.position = "absolute";
     barImage.style.top = "25%";
     barImage.style.left = "50%";
     barImage.style.transform = "translate(-50%, 0)";
     barImage.style.height = "50vh";
     barImage.style.width = "auto";
-    barImage.style.transition = "opacity 4s ease";
+    // Apply CSS animation defined in index.html: rotateFadeOut (10s, forwards)
+    barImage.style.animation = "rotateFadeOut 10s forwards";
     document.body.appendChild(barImage);
-    setTimeout(function () {
-      barImage.style.opacity = "1";
-    }, 3000);
+
+    // maxi2.png will fade in and rotate infinitely, starting after 10s delay
+    maxi2Image = document.createElement("img");
+    maxi2Image.src = "textures/maxi2.png"; // Ensure the file is named maxi2.png and is in the textures folder.
+    maxi2Image.style.position = "absolute";
+    maxi2Image.style.top = "25%";
+    maxi2Image.style.left = "50%";
+    maxi2Image.style.transform = "translate(-50%, 0)";
+    maxi2Image.style.height = "50vh";
+    maxi2Image.style.width = "auto";
+    maxi2Image.style.opacity = "0"; // initially hidden
+    // Set animation with a 10s delay then infinite rotation with fade in
+    maxi2Image.style.animation = "fadeInRotateInfinite 10s linear infinite";
+    maxi2Image.style.animationDelay = "10s";
+    document.body.appendChild(maxi2Image);
 
     // Clock and window resize listener
     clock = new THREE.Clock();
@@ -195,7 +208,7 @@ var Simulation = (function () {
     composer.setSize(window.innerWidth, window.innerHeight);
   }
 
-  // UPDATED updateParticles() to reset particles if they move too far (continuing the animation)
+  // UPDATED updateParticles() to reset particles if they move too far (ensuring continuous animation)
   function updateParticles(delta) {
     var positions = particleSystem.geometry.attributes.position.array;
     for (var i = 0; i < particleCount; i++) {
@@ -204,13 +217,12 @@ var Simulation = (function () {
       positions[index + 1] += particleVelocities[index + 1] * params.expansionSpeed * delta;
       positions[index + 2] += particleVelocities[index + 2] * params.expansionSpeed * delta;
       
-      // Calculate the distance from the origin
+      // Calculate distance from origin; reset if too far
       var distance = Math.sqrt(
         positions[index] * positions[index] +
         positions[index + 1] * positions[index + 1] +
         positions[index + 2] * positions[index + 2]
       );
-      // Reset the particle if it has moved too far
       if (distance > 500) {
          positions[index] = 0;
          positions[index + 1] = 0;
