@@ -53,6 +53,13 @@
     #flag .subtitle span.blue {
       color: #0091EA;
     }
+    /* Timer styling - centered under the header */
+    #timer {
+      text-align: center;
+      font-size: 1.5rem;
+      color: #ffcc00;
+      margin-top: 10px;
+    }
     /* Center container for QR code and instruction */
     #centerDisplay {
       position: absolute;
@@ -64,11 +71,6 @@
       width: 90%;
       font-size: 1.3rem;
       padding: 20px;
-    }
-    /* QR container: center horizontally */
-    #qrContainer {
-      display: block;
-      margin: 0 auto;
     }
     /* Instruction text */
     #instruction {
@@ -116,6 +118,7 @@
   <div id="flag">
     <div class="big-bold">Lift & Earn</div>
     <div class="subtitle"><span class="blue">Simplix</span> Gym Rewards</div>
+    <div id="timer"></div>
   </div>
 
   <!-- Main container for QR code and instruction -->
