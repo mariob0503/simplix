@@ -53,7 +53,7 @@
     #flag .subtitle span.blue {
       color: #0091EA;
     }
-    /* Timer styling: centered below header, white text */
+    /* Timer styling: centered below header with white text */
     #timer {
       text-align: center;
       font-size: 1.5rem;
@@ -105,7 +105,7 @@
     button:active {
       transform: scale(0.98);
     }
-    /* Display area for messages - centered both horizontally and vertically */
+    /* Display area for messages: centered both horizontally and vertically */
     #displayArea {
       position: absolute;
       top: 50%;
@@ -144,10 +144,12 @@
   <!-- Display area for messages -->
   <div id="displayArea"></div>
 
+  <!-- Load simulation.js first (for Simulation.start()) -->
+  <script src="js/simulation.js"></script>
   <!-- Load main.js as an ES module -->
   <script type="module" src="js/main.js"></script>
 
-  <!-- Particle animation script (unchanged) -->
+  <!-- Particle animation script -->
   <script>
     (function(){
       var canvas = document.getElementById("bgCanvas");
