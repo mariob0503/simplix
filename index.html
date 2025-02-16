@@ -6,9 +6,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Include QRCode.js from CDN -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <!-- Include Firebase SDKs for app and database -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js"></script>
   <style>
     /* Global styling */
     html, body {
@@ -30,7 +27,7 @@
       z-index: 0;
       pointer-events: none;
     }
-    /* Header with pulsating glow */
+    /* Lift & Earn Header with pulsating glow */
     #flag {
       position: absolute;
       top: 0;
@@ -68,13 +65,6 @@
       font-size: 1.3rem;
       padding: 20px;
     }
-    /* Sensor readings – hidden by default */
-    #sensorReadings {
-      display: none;
-      font-size: 1rem;
-      margin-bottom: 10px;
-      line-height: 1.4;
-    }
     /* Buttons container */
     .buttons {
       position: absolute;
@@ -97,32 +87,17 @@
     button:active {
       transform: scale(0.98);
     }
-    /* Tap overlay (for Chrome users) */
-    #tapOverlay {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.7);
-      z-index: 100;
+    /* Display area for messages */
+    #displayArea {
       text-align: center;
-      padding-top: 40vh;
-      color: #ffffff;
-      font-size: 1.8rem;
+      font-size: 1.3rem;
+      margin-top: 20px;
     }
-    #tapOverlay #tapMessage {
-      display: inline-block;
-      padding: 20px 40px;
-      border: 2px solid #0091EA;
-      border-radius: 10px;
-      animation: pulse 2s infinite;
-    }
-    @keyframes pulse {
-      0% { transform: scale(1); opacity: 1; }
-      50% { transform: scale(1.1); opacity: 0.7; }
-      100% { transform: scale(1); opacity: 1; }
+    /* Particle animation keyframes, if needed, can go here */
+    @keyframes brightPulse {
+      0% { text-shadow: 0 0 20px rgba(255,255,255,0.5); }
+      50% { text-shadow: 0 0 40px rgba(255,255,255,1); }
+      100% { text-shadow: 0 0 20px rgba(255,255,255,0.5); }
     }
   </style>
 </head>
@@ -130,46 +105,78 @@
   <!-- Background canvas for animated particles -->
   <canvas id="bgCanvas"></canvas>
 
-  <!-- Header / Branding -->
+  <!-- Lift & Earn UI -->
   <div id="flag">
     <div class="big-bold">Lift & Earn</div>
     <div class="subtitle"><span class="blue">Simplix</span> Gym Rewards</div>
   </div>
 
-  <!-- Main container for QR code and messages -->
+  <!-- Main container (QR code on Display, hidden on Controller) -->
   <div id="centerDisplay" class="initial">
     <div id="qrContainer"></div>
     <p>Choose your action to log your points.</p>
   </div>
-  <div id="sensorReadings"></div>
+
+  <!-- Buttons -->
   <div class="buttons">
     <button id="shakeButton">Shake</button>
     <button id="tiltButton">Tilt</button>
     <button id="logPointsButton">Log Points</button>
   </div>
-  <div id="tapOverlay">
-    <div id="tapMessage">Tap anywhere to continue</div>
-  </div>
+
+  <!-- Display area for messages -->
   <div id="displayArea"></div>
 
-  <!-- Dynamically load controller.js or display.js based on URL parameter -->
+  <!-- Our main.js as an ES module -->
+  <script type="module" src="js/main.js"></script>
+
+  <!-- Optional: background particle animation -->
   <script>
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.has('controller')) {
-      // Load Controller logic
-      var script = document.createElement("script");
-      script.src = "QRCode/controller.js";
-      script.type = "text/javascript";
-      document.body.appendChild(script);
-      console.log("Loading controller.js");
-    } else {
-      // Load Display logic
-      var script = document.createElement("script");
-      script.src = "QRCode/display.js";
-      script.type = "text/javascript";
-      document.body.appendChild(script);
-      console.log("Loading display.js");
-    }
+    (function(){
+      var canvas = document.getElementById("bgCanvas");
+      var ctx = canvas.getContext("2d");
+      var particles = [];
+      var numParticles = 100;
+
+      function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+      window.addEventListener("resize", resize);
+      resize();
+
+      function Particle() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.radius = Math.random() * 2 + 1;
+        this.speedX = Math.random() * 0.5 - 0.25;
+        this.speedY = Math.random() * 0.5 - 0.25;
+        this.alpha = Math.random();
+      }
+
+      for (var i = 0; i < numParticles; i++) {
+        particles.push(new Particle());
+      }
+
+      function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        for (var i = 0; i < particles.length; i++) {
+          var p = particles[i];
+          p.x += p.speedX;
+          p.y += p.speedY;
+          if (p.x < 0) p.x = canvas.width;
+          if (p.x > canvas.width) p.x = 0;
+          if (p.y < 0) p.y = canvas.height;
+          if (p.y > canvas.height) p.y = 0;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2, false);
+          ctx.fillStyle = "rgba(173,216,230," + p.alpha + ")";
+          ctx.fill();
+        }
+        requestAnimationFrame(animate);
+      }
+      animate();
+    })();
   </script>
 </body>
 </html>
