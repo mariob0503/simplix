@@ -2,9 +2,10 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-analytics.js";
 import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
-import { generateQRCode } from "../QRCode/qrcode.js"; // Adjust path if necessary
+import { generateQRCode } from "./qr.js"; // qr.js is now in the same js folder
 
-// Firebase configuration (replace with your actual values)
+// -------------------------------------------------
+// 1) Firebase configuration (replace with your actual values)
 const firebaseConfig = {
   apiKey: "AIzaSyBkhEqivOcbkzd1MySLaNCRuSyeWbEz4UQ",
   authDomain: "simplixliftandearn.firebaseapp.com",
@@ -21,19 +22,20 @@ const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
 const db = getDatabase(app);
 
-// Check if this instance is the Controller
+// -------------------------------------------------
+// 2) Check if this instance is the Controller
 const urlParams = new URLSearchParams(window.location.search);
 const isController = urlParams.has("controller");
 console.log("Is Controller:", isController);
 
-// ---------------------------
-// Display logic (no ?controller)
+// -------------------------------------------------
+// 3) Display logic (if not Controller)
 if (!isController) {
-  // Clear any old control message so the QR code is displayed on refresh
+  // Clear any old control message so the QR code is visible on refresh
   set(ref(db, "liftandearn/control"), null)
     .then(() => {
       console.log("Display: Cleared old control message.");
-      // Generate the QR code (points to the same URL with ?controller)
+      // Generate the QR code that points to the same URL with ?controller appended
       generateQRCode("qrContainer", window.location.href + "?controller");
     })
     .catch((error) => {
@@ -48,7 +50,7 @@ if (!isController) {
     console.log("Display received control message:", data);
     if (data) {
       if (data.message === "controller-online") {
-        // Hide the QR code and show control message in the center
+        // Hide the QR code and show the control message
         document.getElementById("qrContainer").style.display = "none";
         document.getElementById("displayArea").innerText = "Control taken by Controller.";
       } else if (data.message === "shake-action") {
@@ -62,28 +64,29 @@ if (!isController) {
     }
   });
 } else {
-  // Controller logic (?controller in URL)
+  // -------------------------------------------------
+  // 4) Controller logic (if ?controller is present)
   // Hide the QR code container on the Controller
   const qrContainer = document.getElementById("qrContainer");
   if (qrContainer) {
     qrContainer.style.display = "none";
   }
   console.log("Controller: QR code container hidden.");
-  
+
   // Hide the instruction text on the Controller
   const instructionElem = document.getElementById("instruction");
   if (instructionElem) {
     instructionElem.style.display = "none";
   }
-  
+
   // After a 2-second delay, send the "controller-online" message
   setTimeout(() => {
     sendControlMessage("controller-online");
   }, 2000);
 }
 
-// ---------------------------
-// Function to send a control message from the Controller
+// -------------------------------------------------
+// 5) Function to send a control message from the Controller
 function sendControlMessage(message) {
   set(ref(db, "liftandearn/control"), {
     message: message,
@@ -97,11 +100,11 @@ function sendControlMessage(message) {
     });
 }
 
-// ---------------------------
-// Button event listeners (for both sides)
+// -------------------------------------------------
+// 6) Button event listeners (applies to both sides)
 document.getElementById("shakeButton").addEventListener("click", () => {
   if (isController) {
-    // Hide instruction on controller
+    // Hide instruction on Controller if visible
     const instructionElem = document.getElementById("instruction");
     if (instructionElem) {
       instructionElem.style.display = "none";
