@@ -27,7 +27,7 @@
       z-index: 0;
       pointer-events: none;
     }
-    /* Lift & Earn Header with pulsating glow */
+    /* Header with pulsating glow */
     #flag {
       position: absolute;
       top: 0;
@@ -53,10 +53,10 @@
     #flag .subtitle span.blue {
       color: #0091EA;
     }
-    /* Center container for QR code and messages */
+    /* Center container for QR code and instruction */
     #centerDisplay {
       position: absolute;
-      top: 60%;
+      top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
       text-align: center;
@@ -64,6 +64,10 @@
       width: 90%;
       font-size: 1.3rem;
       padding: 20px;
+    }
+    /* Instruction text */
+    #instruction {
+      margin-top: 10px;
     }
     /* Buttons container */
     .buttons {
@@ -87,17 +91,11 @@
     button:active {
       transform: scale(0.98);
     }
-    /* Display area for messages */
+    /* Display area for messages (centered) */
     #displayArea {
       text-align: center;
       font-size: 1.3rem;
       margin-top: 20px;
-    }
-    /* Particle animation keyframes, if needed, can go here */
-    @keyframes brightPulse {
-      0% { text-shadow: 0 0 20px rgba(255,255,255,0.5); }
-      50% { text-shadow: 0 0 40px rgba(255,255,255,1); }
-      100% { text-shadow: 0 0 20px rgba(255,255,255,0.5); }
     }
   </style>
 </head>
@@ -105,16 +103,16 @@
   <!-- Background canvas for animated particles -->
   <canvas id="bgCanvas"></canvas>
 
-  <!-- Lift & Earn UI -->
+  <!-- Header / Branding -->
   <div id="flag">
     <div class="big-bold">Lift & Earn</div>
     <div class="subtitle"><span class="blue">Simplix</span> Gym Rewards</div>
   </div>
 
-  <!-- Main container (QR code on Display, hidden on Controller) -->
+  <!-- Main container for QR code and instruction -->
   <div id="centerDisplay" class="initial">
     <div id="qrContainer"></div>
-    <p>Choose your action to log your points.</p>
+    <p id="instruction">Choose your action to log your points.</p>
   </div>
 
   <!-- Buttons -->
@@ -127,56 +125,7 @@
   <!-- Display area for messages -->
   <div id="displayArea"></div>
 
-  <!-- Our main.js as an ES module -->
+  <!-- Load main.js as an ES module -->
   <script type="module" src="js/main.js"></script>
-
-  <!-- Optional: background particle animation -->
-  <script>
-    (function(){
-      var canvas = document.getElementById("bgCanvas");
-      var ctx = canvas.getContext("2d");
-      var particles = [];
-      var numParticles = 100;
-
-      function resize() {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-      }
-      window.addEventListener("resize", resize);
-      resize();
-
-      function Particle() {
-        this.x = Math.random() * canvas.width;
-        this.y = Math.random() * canvas.height;
-        this.radius = Math.random() * 2 + 1;
-        this.speedX = Math.random() * 0.5 - 0.25;
-        this.speedY = Math.random() * 0.5 - 0.25;
-        this.alpha = Math.random();
-      }
-
-      for (var i = 0; i < numParticles; i++) {
-        particles.push(new Particle());
-      }
-
-      function animate() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        for (var i = 0; i < particles.length; i++) {
-          var p = particles[i];
-          p.x += p.speedX;
-          p.y += p.speedY;
-          if (p.x < 0) p.x = canvas.width;
-          if (p.x > canvas.width) p.x = 0;
-          if (p.y < 0) p.y = canvas.height;
-          if (p.y > canvas.height) p.y = 0;
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2, false);
-          ctx.fillStyle = "rgba(173,216,230," + p.alpha + ")";
-          ctx.fill();
-        }
-        requestAnimationFrame(animate);
-      }
-      animate();
-    })();
-  </script>
 </body>
 </html>
