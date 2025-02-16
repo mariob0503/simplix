@@ -1,5 +1,5 @@
 /* 
-  display.js
+  display.js 
   This file runs on the DISPLAY side (e.g., a large screen).
   It clears any old control message, shows a QR code,
   and listens for messages from the CONTROLLER (on another device).
