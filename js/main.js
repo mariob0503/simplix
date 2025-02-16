@@ -87,16 +87,11 @@ if (!isController) {
       } else if (data.message === "tilt-action") {
         document.getElementById("displayArea").innerText = "Tilt action received on Display!";
       } else if (data.message === "log-points") {
-        console.log("Display: Received 'log-points' message. Starting simulation...");
-        // Start simulation (assuming Simulation.start() is defined in simulation.js)
-        if (typeof Simulation !== "undefined" && Simulation.start) {
-          Simulation.start();
-        } else {
-          console.error("Simulation module is not available.");
-        }
+        console.log("Display: Received 'log-points' message. Redirecting to bigbang...");
+        window.location.href = "https://mariob0503.github.io/bigbang/";
       }
     }
-    // Do not auto-clear on Display for null values here.
+    // We do not auto-clear on Display when data is null.
   });
 } else {
   // -------------------------------------------------
@@ -139,6 +134,7 @@ function sendControlMessage(message) {
 // 6) Button event listeners (applies to both sides)
 document.getElementById("shakeButton").addEventListener("click", () => {
   if (isController) {
+    // Hide instruction on Controller if visible
     const instructionElem = document.getElementById("instruction");
     if (instructionElem) {
       instructionElem.style.display = "none";
