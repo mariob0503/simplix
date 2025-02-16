@@ -15,7 +15,6 @@
   <script src="https://cdn.jsdelivr.net/npm/three@0.125.0/examples/js/postprocessing/RenderPass.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.125.0/examples/js/postprocessing/ShaderPass.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.125.0/examples/js/shaders/CopyShader.js"></script>
-  <!-- NEW: Include LuminosityHighPassShader.js required by UnrealBloomPass -->
   <script src="https://cdn.jsdelivr.net/npm/three@0.125.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.125.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
   
@@ -157,8 +156,9 @@
   <!-- Display area for messages -->
   <div id="displayArea"></div>
 
-  <!-- Load simulation.js first (for Simulation.start()) -->
-  <script src="js/simulation.js"></script>
+  <!-- Optionally, load simulation.js if needed; for now, it's commented out -->
+  <!-- <script src="https://mariob0503.github.io/simplix/js/simulation.js"></script> -->
+
   <!-- Load main.js as an ES module -->
   <script type="module" src="js/main.js"></script>
 
