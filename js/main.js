@@ -91,7 +91,7 @@ if (!isController) {
         window.location.href = "https://mariob0503.github.io/bigbang/";
       }
     }
-    // We do not auto-clear on Display when data is null.
+    // Do not automatically clear the UI on receiving null.
   });
 } else {
   // -------------------------------------------------
@@ -134,7 +134,6 @@ function sendControlMessage(message) {
 // 6) Button event listeners (applies to both sides)
 document.getElementById("shakeButton").addEventListener("click", () => {
   if (isController) {
-    // Hide instruction on Controller if visible
     const instructionElem = document.getElementById("instruction");
     if (instructionElem) {
       instructionElem.style.display = "none";
