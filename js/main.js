@@ -2,7 +2,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-analytics.js";
 import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
-import { generateQRCode } from "./qr.js"; // qr.js is in the same js folder
+import { generateQRCode } from "./qr.js"; // now in the same js folder
 
 // -------------------------------------------------
 // 1) Firebase configuration (replace with your actual values)
@@ -87,11 +87,17 @@ if (!isController) {
       } else if (data.message === "tilt-action") {
         document.getElementById("displayArea").innerText = "Tilt action received on Display!";
       } else if (data.message === "log-points") {
-        console.log("Display: Received 'log-points' message. Redirecting...");
-        window.location.href = "https://mariob0503.github.io/simplix/";
+        console.log("Display: Received 'log-points' message. Starting simulation...");
+        // Instead of resetting everything, we start the simulation that uses bar.png and maxi2.png.
+        // This assumes your simulation.js defines a global Simulation with a start() method.
+        if (typeof Simulation !== "undefined" && Simulation.start) {
+          Simulation.start();
+        } else {
+          console.error("Simulation module is not available.");
+        }
       }
     }
-    // We no longer auto-clear on Display because we rely on the Controller's auto-clear.
+    // We do not clear the message here automatically.
   });
 } else {
   // -------------------------------------------------
@@ -142,7 +148,7 @@ document.getElementById("shakeButton").addEventListener("click", () => {
     console.log("Controller: Shake button pressed");
     sendControlMessage("shake-action");
     document.getElementById("displayArea").innerText = "Shake action received on Controller!";
-    // Auto-clear control message after 3.5 seconds
+    // Clear control message after 3.5 seconds
     setTimeout(() => {
       set(ref(db, "liftandearn/control"), null)
         .then(() => {
