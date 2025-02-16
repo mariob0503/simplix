@@ -1,17 +1,10 @@
 // main.js
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-analytics.js";
-import {
-  getDatabase,
-  ref,
-  set,
-  onValue
-} from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+import { generateQRCode } from "../QRCode/qrcode.js"; // Adjust path if necessary
 
-import { generateQRCode } from "./qr.js";
-
-// -------------------------------------------------
-// 1) Firebase configuration (replace with your actual values)
+// Firebase configuration (replace with your actual values)
 const firebaseConfig = {
   apiKey: "AIzaSyBkhEqivOcbkzd1MySLaNCRuSyeWbEz4UQ",
   authDomain: "simplixliftandearn.firebaseapp.com",
@@ -28,35 +21,34 @@ const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
 const db = getDatabase(app);
 
-// -------------------------------------------------
-// 2) Check if this instance is the Controller
+// Check if this instance is the Controller
 const urlParams = new URLSearchParams(window.location.search);
 const isController = urlParams.has("controller");
 console.log("Is Controller:", isController);
 
-// -------------------------------------------------
-// 3) Display logic (no ?controller):
-//    - Clear old message so QR code is visible on refresh
-//    - Generate QR code that points to the same URL + ?controller
+// ---------------------------
+// Display logic (no ?controller)
 if (!isController) {
+  // Clear any old control message so the QR code is displayed on refresh
   set(ref(db, "liftandearn/control"), null)
     .then(() => {
       console.log("Display: Cleared old control message.");
+      // Generate the QR code (points to the same URL with ?controller)
       generateQRCode("qrContainer", window.location.href + "?controller");
     })
     .catch((error) => {
-      console.error("Display: Error clearing old message:", error);
+      console.error("Display: Error clearing old control message:", error);
       generateQRCode("qrContainer", window.location.href + "?controller");
     });
 
-  // Listen for control messages
+  // Listen for control messages from Firebase
   const controlRef = ref(db, "liftandearn/control");
   onValue(controlRef, (snapshot) => {
     const data = snapshot.val();
     console.log("Display received control message:", data);
     if (data) {
       if (data.message === "controller-online") {
-        // Hide the QR code and show "Control taken"
+        // Hide the QR code and show control message in the center
         document.getElementById("qrContainer").style.display = "none";
         document.getElementById("displayArea").innerText = "Control taken by Controller.";
       } else if (data.message === "shake-action") {
@@ -64,29 +56,34 @@ if (!isController) {
       } else if (data.message === "tilt-action") {
         document.getElementById("displayArea").innerText = "Tilt action received on Display!";
       } else if (data.message === "log-points") {
-        console.log("Display: 'log-points' received. Redirecting...");
+        console.log("Display: Received 'log-points' message. Redirecting...");
         window.location.href = "https://mariob0503.github.io/simplix/";
       }
     }
   });
 } else {
-  // -------------------------------------------------
-  // 4) Controller logic (?controller in URL):
-  //    - Hide QR code container
-  //    - After 2s, send "controller-online"
+  // Controller logic (?controller in URL)
+  // Hide the QR code container on the Controller
   const qrContainer = document.getElementById("qrContainer");
   if (qrContainer) {
     qrContainer.style.display = "none";
   }
   console.log("Controller: QR code container hidden.");
-
+  
+  // Hide the instruction text on the Controller
+  const instructionElem = document.getElementById("instruction");
+  if (instructionElem) {
+    instructionElem.style.display = "none";
+  }
+  
+  // After a 2-second delay, send the "controller-online" message
   setTimeout(() => {
     sendControlMessage("controller-online");
   }, 2000);
 }
 
-// -------------------------------------------------
-// 5) Function to send a message from the Controller
+// ---------------------------
+// Function to send a control message from the Controller
 function sendControlMessage(message) {
   set(ref(db, "liftandearn/control"), {
     message: message,
@@ -100,10 +97,15 @@ function sendControlMessage(message) {
     });
 }
 
-// -------------------------------------------------
-// 6) Button event listeners (both sides)
+// ---------------------------
+// Button event listeners (for both sides)
 document.getElementById("shakeButton").addEventListener("click", () => {
   if (isController) {
+    // Hide instruction on controller
+    const instructionElem = document.getElementById("instruction");
+    if (instructionElem) {
+      instructionElem.style.display = "none";
+    }
     console.log("Controller: Shake button pressed");
     sendControlMessage("shake-action");
     document.getElementById("displayArea").innerText = "Shake action received on Controller!";
@@ -114,6 +116,10 @@ document.getElementById("shakeButton").addEventListener("click", () => {
 
 document.getElementById("tiltButton").addEventListener("click", () => {
   if (isController) {
+    const instructionElem = document.getElementById("instruction");
+    if (instructionElem) {
+      instructionElem.style.display = "none";
+    }
     console.log("Controller: Tilt button pressed");
     sendControlMessage("tilt-action");
     document.getElementById("displayArea").innerText = "Tilt action received on Controller!";
@@ -124,6 +130,10 @@ document.getElementById("tiltButton").addEventListener("click", () => {
 
 document.getElementById("logPointsButton").addEventListener("click", () => {
   if (isController) {
+    const instructionElem = document.getElementById("instruction");
+    if (instructionElem) {
+      instructionElem.style.display = "none";
+    }
     console.log("Controller: Log Points button pressed");
     sendControlMessage("log-points");
     document.getElementById("displayArea").innerText = "Log Points action received on Controller!";
