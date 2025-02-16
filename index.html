@@ -4,6 +4,11 @@
   <meta charset="UTF-8">
   <title>Lift & Earn – Gamification</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Include QRCode.js from CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <!-- Include Firebase SDKs for app and database -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js"></script>
   <style>
     /* Global styling */
     html, body {
@@ -35,7 +40,7 @@
       z-index: 10;
     }
     #flag .big-bold {
-      font-size: 4rem; /* Increased size */
+      font-size: 4rem;
       font-weight: bold;
       animation: brightPulse 2s infinite;
     }
@@ -45,14 +50,13 @@
       100% { text-shadow: 0 0 20px rgba(255,255,255,0.5); }
     }
     #flag .subtitle {
-      font-size: 2rem; /* Increased size */
+      font-size: 2rem;
       margin-top: 5px;
     }
-    /* The new subline: Simplix in blue, Gym Rewards in white */
     #flag .subtitle span.blue {
       color: #0091EA;
     }
-    /* Center container for messages */
+    /* Center container for messages and QR code */
     #centerDisplay {
       position: absolute;
       top: 60%;
@@ -120,32 +124,7 @@
       50% { transform: scale(1.1); opacity: 0.7; }
       100% { transform: scale(1); opacity: 1; }
     }
-    /* CSS animations for rotating images */
-    @keyframes rotateFadeOut {
-      0% { transform: rotate(0deg); opacity: 1; }
-      100% { transform: rotate(360deg); opacity: 0; }
-    }
-    @keyframes fadeInRotateInfinite {
-      0% { transform: rotate(0deg); opacity: 0; }
-      10% { opacity: 1; }
-      100% { transform: rotate(360deg); opacity: 1; }
-    }
   </style>
-  <!-- Three.js and required libraries -->
-  <script src="https://cdn.jsdelivr.net/npm/three@0.125.0/build/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.125.0/examples/js/controls/OrbitControls.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/dat.gui@0.7.7/build/dat.gui.min.js"></script>
-  <!-- Postprocessing dependencies (order is important) -->
-  <script src="https://cdn.jsdelivr.net/npm/three@0.125.0/examples/js/shaders/CopyShader.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.125.0/examples/js/postprocessing/Pass.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.125.0/examples/js/postprocessing/ShaderPass.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.125.0/examples/js/postprocessing/EffectComposer.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.125.0/examples/js/postprocessing/RenderPass.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.125.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.125.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
-  <!-- Our custom modules -->
-  <script src="js/simulation.js"></script>
-  <script src="js/main.js"></script>
 </head>
 <body>
   <!-- Background canvas for animated particles -->
@@ -157,7 +136,9 @@
     <div class="subtitle"><span class="blue">Simplix</span> Gym Rewards</div>
   </div>
   <div id="centerDisplay" class="initial">
-    Choose your action to log your points.
+    <!-- This container will hold the QR code on the Display side -->
+    <div id="qrContainer"></div>
+    <p>Choose your action to log your points.</p>
   </div>
   <div id="sensorReadings"></div>
   <div class="buttons">
@@ -168,55 +149,27 @@
   <div id="tapOverlay">
     <div id="tapMessage">Tap anywhere to continue</div>
   </div>
-  
+  <div id="displayArea"></div>
+
+  <!-- Dynamic script loading based on URL parameter -->
   <script>
-    // Background Particle Animation on the start page
-    (function(){
-      var canvas = document.getElementById("bgCanvas");
-      var ctx = canvas.getContext("2d");
-      var particles = [];
-      var numParticles = 100;
-      
-      function resize() {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-      }
-      window.addEventListener("resize", resize);
-      resize();
-      
-      // Particle constructor
-      function Particle() {
-        this.x = Math.random() * canvas.width;
-        this.y = Math.random() * canvas.height;
-        this.radius = Math.random() * 2 + 1;
-        this.speedX = Math.random() * 0.5 - 0.25;
-        this.speedY = Math.random() * 0.5 - 0.25;
-        this.alpha = Math.random();
-      }
-      
-      for (var i = 0; i < numParticles; i++) {
-        particles.push(new Particle());
-      }
-      
-      function animate() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        for (var i = 0; i < particles.length; i++) {
-          var p = particles[i];
-          p.x += p.speedX;
-          p.y += p.speedY;
-          if (p.x < 0) p.x = canvas.width;
-          if (p.x > canvas.width) p.x = 0;
-          if (p.y < 0) p.y = canvas.height;
-          if (p.y > canvas.height) p.y = 0;
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2, false);
-          ctx.fillStyle = "rgba(173,216,230," + p.alpha + ")";
-          ctx.fill();
-        }
-        requestAnimationFrame(animate);
-      }
-      animate();
-    })();
+    // Check for ?controller in the URL
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('controller')) {
+      // Load the Controller logic
+      var script = document.createElement("script");
+      script.src = "QRCode/controller.js";
+      script.type = "text/javascript";
+      document.body.appendChild(script);
+      console.log("Loading controller.js");
+    } else {
+      // Load the Display logic
+      var script = document.createElement("script");
+      script.src = "QRCode/display.js";
+      script.type = "text/javascript";
+      document.body.appendChild(script);
+      console.log("Loading display.js");
+    }
   </script>
 </body>
 </html>
