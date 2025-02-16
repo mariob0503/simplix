@@ -88,7 +88,7 @@ if (!isController) {
         document.getElementById("displayArea").innerText = "Tilt action received on Display!";
       } else if (data.message === "log-points") {
         console.log("Display: Received 'log-points' message. Starting simulation...");
-        // Start the simulation (this assumes Simulation.start() is defined in simulation.js)
+        // Start simulation (assuming Simulation.start() is defined in simulation.js)
         if (typeof Simulation !== "undefined" && Simulation.start) {
           Simulation.start();
         } else {
@@ -96,7 +96,7 @@ if (!isController) {
         }
       }
     }
-    // We do not automatically clear the UI on receiving null if no active control.
+    // Do not auto-clear on Display for null values here.
   });
 } else {
   // -------------------------------------------------
@@ -139,7 +139,6 @@ function sendControlMessage(message) {
 // 6) Button event listeners (applies to both sides)
 document.getElementById("shakeButton").addEventListener("click", () => {
   if (isController) {
-    // Hide instruction on Controller if visible
     const instructionElem = document.getElementById("instruction");
     if (instructionElem) {
       instructionElem.style.display = "none";
