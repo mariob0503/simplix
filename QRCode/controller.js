@@ -1,88 +1,76 @@
-/* 
-  controller.js
-  This file runs on the CONTROLLER side (e.g., a smartphone).
-  It hides the QR code container and sends messages to the DISPLAY
-  via Firebase Realtime Database.
-*/
-
+// QRCode/controller.js
 document.addEventListener('DOMContentLoaded', function() {
-
-  // 1) Load Firebase scripts from your HTML (before this file),
-  //    or inline here if you prefer. For example:
-  //    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js"></script>
-  //    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js"></script>
-  //    <script src="controller.js"></script>
-
-  // 2) Initialize Firebase. Use the same config as in display.js.
+  // Firebase configuration (replace with your actual values)
   const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_PROJECT.firebaseapp.com",
-    databaseURL: "https://YOUR_PROJECT.firebaseio.com",
-    projectId: "YOUR_PROJECT",
-    storageBucket: "YOUR_PROJECT.appspot.com",
-    messagingSenderId: "YOUR_SENDER_ID",
-    appId: "YOUR_APP_ID"
+    apiKey: "AIzaSyBkhEqivOcbkzd1MySLaNCRuSyeWbEz4UQ",
+    authDomain: "simplixliftandearn.firebaseapp.com",
+    databaseURL: "https://simplixliftandearn-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "simplixliftandearn",
+    storageBucket: "simplixliftandearn.firebasestorage.app",
+    messagingSenderId: "901097563834",
+    appId: "1:901097563834:web:7639d8d3eca0f986f34483",
+    measurementId: "G-T680ZGWH3Y"
   };
-  const app = firebase.initializeApp(firebaseConfig);
+
+  // Initialize Firebase
+  if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+  }
   const db = firebase.database();
 
-  // 3) On load, hide the QR container if it exists.
+  // Hide the QR code container on the Controller.
   const qrContainer = document.getElementById("qrContainer");
   if (qrContainer) {
     qrContainer.style.display = "none";
   }
-  console.log("Controller: Hiding QR code container.");
+  console.log("Controller: QR code container hidden.");
 
-  // 4) Send a "controller-online" message so the Display knows we've connected.
-  function sendMessage(msg) {
-    db.ref("liftandearn/control").set({
-      message: msg,
+  // Function to send a control message.
+  function sendControlMessage(message) {
+    firebase.database().ref("liftandearn/control").set({
+      message: message,
       timestamp: Date.now()
-    }).then(() => {
-      console.log("Controller: Sent message:", msg);
-    }).catch((error) => {
+    })
+    .then(() => {
+      console.log("Controller: Sent message:", message);
+    })
+    .catch((error) => {
       console.error("Controller: Error sending message:", error);
     });
   }
 
-  // 5) Send "controller-online" on load, so the Display hides its QR code immediately.
+  // Immediately send "controller-online" after a short delay.
   setTimeout(() => {
-    sendMessage("controller-online");
+    sendControlMessage("controller-online");
   }, 2000);
 
-  // 6) Button event listeners
+  // Button event listeners.
   const shakeButton = document.getElementById("shakeButton");
   const tiltButton = document.getElementById("tiltButton");
   const logPointsButton = document.getElementById("logPointsButton");
   const displayArea = document.getElementById("displayArea");
 
   if (shakeButton) {
-    shakeButton.addEventListener("click", () => {
+    shakeButton.addEventListener("click", function() {
       console.log("Controller: Shake button pressed");
-      sendMessage("shake-action");
-      if (displayArea) {
-        displayArea.innerText = "Shake action received on Controller!";
-      }
+      sendControlMessage("shake-action");
+      displayArea.innerText = "Shake action received on Controller!";
     });
   }
 
   if (tiltButton) {
-    tiltButton.addEventListener("click", () => {
+    tiltButton.addEventListener("click", function() {
       console.log("Controller: Tilt button pressed");
-      sendMessage("tilt-action");
-      if (displayArea) {
-        displayArea.innerText = "Tilt action received on Controller!";
-      }
+      sendControlMessage("tilt-action");
+      displayArea.innerText = "Tilt action received on Controller!";
     });
   }
 
   if (logPointsButton) {
-    logPointsButton.addEventListener("click", () => {
+    logPointsButton.addEventListener("click", function() {
       console.log("Controller: Log Points button pressed");
-      sendMessage("log-points");
-      if (displayArea) {
-        displayArea.innerText = "Log Points action received on Controller!";
-      }
+      sendControlMessage("log-points");
+      displayArea.innerText = "Log Points action received on Controller!";
     });
   }
 });
