@@ -1,7 +1,13 @@
 // main.js
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-analytics.js";
-import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+import {
+  getDatabase,
+  ref,
+  set,
+  onValue
+} from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+
 import { generateQRCode } from "./qr.js";
 
 // -------------------------------------------------
@@ -23,78 +29,71 @@ const analytics = getAnalytics(app);
 const db = getDatabase(app);
 
 // -------------------------------------------------
-// 2) Check if this instance is the Controller or the Display
+// 2) Check if this instance is the Controller
 const urlParams = new URLSearchParams(window.location.search);
 const isController = urlParams.has("controller");
 console.log("Is Controller:", isController);
 
 // -------------------------------------------------
-// 3) On the Display side (no ?controller):
-//    - Clear old message so the QR code is shown on refresh
-//    - Generate the QR code that points to ?controller
+// 3) Display logic (no ?controller):
+//    - Clear old message so QR code is visible on refresh
+//    - Generate QR code that points to the same URL + ?controller
 if (!isController) {
-  // Clear old message
   set(ref(db, "liftandearn/control"), null)
     .then(() => {
       console.log("Display: Cleared old control message.");
-      // Generate the QR code that points to this same page + ?controller
       generateQRCode("qrContainer", window.location.href + "?controller");
     })
     .catch((error) => {
       console.error("Display: Error clearing old message:", error);
-      // Even if there's an error, still generate the QR code
       generateQRCode("qrContainer", window.location.href + "?controller");
     });
+
+  // Listen for control messages
+  const controlRef = ref(db, "liftandearn/control");
+  onValue(controlRef, (snapshot) => {
+    const data = snapshot.val();
+    console.log("Display received control message:", data);
+    if (data) {
+      if (data.message === "controller-online") {
+        // Hide the QR code and show "Control taken"
+        document.getElementById("qrContainer").style.display = "none";
+        document.getElementById("displayArea").innerText = "Control taken by Controller.";
+      } else if (data.message === "shake-action") {
+        document.getElementById("displayArea").innerText = "Shake action received on Display!";
+      } else if (data.message === "tilt-action") {
+        document.getElementById("displayArea").innerText = "Tilt action received on Display!";
+      } else if (data.message === "log-points") {
+        console.log("Display: 'log-points' received. Redirecting...");
+        window.location.href = "https://mariob0503.github.io/simplix/";
+      }
+    }
+  });
 } else {
-  // On the Controller side: hide the QR code container
+  // -------------------------------------------------
+  // 4) Controller logic (?controller in URL):
+  //    - Hide QR code container
+  //    - After 2s, send "controller-online"
   const qrContainer = document.getElementById("qrContainer");
   if (qrContainer) {
     qrContainer.style.display = "none";
   }
-  console.log("Controller: Hiding QR code container.");
+  console.log("Controller: QR code container hidden.");
 
-  // After 2 seconds, send "controller-online" so the Display knows we connected
   setTimeout(() => {
     sendControlMessage("controller-online");
   }, 2000);
 }
 
 // -------------------------------------------------
-// 4) Real-time listener on the Display side
-if (!isController) {
-  const controlRef = ref(db, "liftandearn/control");
-  onValue(controlRef, (snapshot) => {
-    const data = snapshot.val();
-    console.log("Display received control message:", data);
-    if (data) {
-      // If the Controller just came online, hide the QR code & show message
-      if (data.message === "controller-online") {
-        document.getElementById("qrContainer").style.display = "none";
-        document.getElementById("displayArea").innerText = "Control taken by Controller.";
-      }
-      else if (data.message === "shake-action") {
-        document.getElementById("displayArea").innerText = "Shake action received on Display!";
-      }
-      else if (data.message === "tilt-action") {
-        document.getElementById("displayArea").innerText = "Tilt action received on Display!";
-      }
-      else if (data.message === "log-points") {
-        console.log("Display: 'log-points' received. Redirecting now...");
-        window.location.href = "https://mariob0503.github.io/simplix/";
-      }
-    }
-  });
-}
-
-// -------------------------------------------------
 // 5) Function to send a message from the Controller
-function sendControlMessage(msg) {
+function sendControlMessage(message) {
   set(ref(db, "liftandearn/control"), {
-    message: msg,
+    message: message,
     timestamp: Date.now()
   })
     .then(() => {
-      console.log("Controller: Sent message:", msg);
+      console.log("Controller: Sent message:", message);
     })
     .catch((error) => {
       console.error("Controller: Error sending message:", error);
@@ -102,7 +101,7 @@ function sendControlMessage(msg) {
 }
 
 // -------------------------------------------------
-// 6) Button event listeners for both sides
+// 6) Button event listeners (both sides)
 document.getElementById("shakeButton").addEventListener("click", () => {
   if (isController) {
     console.log("Controller: Shake button pressed");
