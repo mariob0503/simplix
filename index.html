@@ -77,4 +77,113 @@
     /* Buttons container */
     .buttons {
       position: absolute;
-      bottom: 10px
+      bottom: 10px;
+      width: 100%;
+      text-align: center;
+      z-index: 30;
+    }
+    button {
+      padding: 10px 20px;
+      margin: 5px;
+      font-size: 1.1rem;
+      background-color: #0091EA;
+      color: #ffffff;
+      border: 1px solid rgba(255,255,255,0.7);
+      border-radius: 5px;
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(255,255,255,0.5);
+    }
+    button:active {
+      transform: scale(0.98);
+    }
+    /* Display area for messages - centered both horizontally and vertically */
+    #displayArea {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      font-size: 1.3rem;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <!-- Background canvas for animated particles -->
+  <canvas id="bgCanvas"></canvas>
+
+  <!-- Header / Branding -->
+  <div id="flag">
+    <div class="big-bold">Lift & Earn</div>
+    <div class="subtitle"><span class="blue">Simplix</span> Gym Rewards</div>
+  </div>
+
+  <!-- Main container for QR code and instruction -->
+  <div id="centerDisplay" class="initial">
+    <div id="qrContainer"></div>
+    <p id="instruction">Choose your action to log your points.</p>
+  </div>
+
+  <!-- Buttons -->
+  <div class="buttons">
+    <button id="shakeButton">Shake</button>
+    <button id="tiltButton">Tilt</button>
+    <button id="logPointsButton">Log Points</button>
+  </div>
+
+  <!-- Display area for messages -->
+  <div id="displayArea"></div>
+
+  <!-- Load main.js as an ES module -->
+  <script type="module" src="js/main.js"></script>
+
+  <!-- Particle animation script (unchanged) -->
+  <script>
+    (function(){
+      var canvas = document.getElementById("bgCanvas");
+      var ctx = canvas.getContext("2d");
+      var particles = [];
+      var numParticles = 100;
+      
+      function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+      window.addEventListener("resize", resize);
+      resize();
+      
+      function Particle() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.radius = Math.random() * 2 + 1;
+        this.speedX = Math.random() * 0.5 - 0.25;
+        this.speedY = Math.random() * 0.5 - 0.25;
+        this.alpha = Math.random();
+      }
+      
+      for (var i = 0; i < numParticles; i++) {
+        particles.push(new Particle());
+      }
+      
+      function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        for (var i = 0; i < particles.length; i++) {
+          var p = particles[i];
+          p.x += p.speedX;
+          p.y += p.speedY;
+          if (p.x < 0) p.x = canvas.width;
+          if (p.x > canvas.width) p.x = 0;
+          if (p.y < 0) p.y = canvas.height;
+          if (p.y > canvas.height) p.y = 0;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2, false);
+          ctx.fillStyle = "rgba(173,216,230," + p.alpha + ")";
+          ctx.fill();
+        }
+        requestAnimationFrame(animate);
+      }
+      animate();
+    })();
+  </script>
+</body>
+</html>
