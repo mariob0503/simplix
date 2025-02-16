@@ -31,9 +31,9 @@ console.log("Is Controller:", isController);
 // Global timer interval variable
 let timerInterval;
 
-// Function to start the countdown timer (180 seconds countdown)
+// Function to start the 180-second countdown timer
 function startTimer() {
-  let remainingTime = 180; // in seconds
+  let remainingTime = 180; // seconds
   const timerElem = document.getElementById("timer");
   timerElem.style.display = "block";
   timerElem.innerText = `Time remaining: ${remainingTime} seconds`;
@@ -76,12 +76,10 @@ if (!isController) {
     console.log("Display received control message:", data);
     if (data) {
       if (data.message === "controller-online") {
-        // Hide the QR code, hide the instruction, and show control message; start timer.
+        // Hide the QR code and instruction, show control message, and start timer.
         document.getElementById("qrContainer").style.display = "none";
         const instructionElem = document.getElementById("instruction");
-        if (instructionElem) {
-          instructionElem.style.display = "none";
-        }
+        if (instructionElem) instructionElem.style.display = "none";
         document.getElementById("displayArea").innerText = "Control taken by Controller.";
         startTimer();
       } else if (data.message === "shake-action") {
@@ -93,14 +91,11 @@ if (!isController) {
         window.location.href = "https://mariob0503.github.io/simplix/";
       }
     } else {
-      // When the control message is cleared (null), stop the timer and regenerate the QR code.
+      // If control message is cleared, stop the timer and regenerate the QR code, and show instruction.
       stopTimer();
       generateQRCode("qrContainer", window.location.href + "?controller");
-      // Optionally, show the instruction again.
       const instructionElem = document.getElementById("instruction");
-      if (instructionElem) {
-        instructionElem.style.display = "block";
-      }
+      if (instructionElem) instructionElem.style.display = "block";
     }
   });
 } else {
@@ -152,7 +147,7 @@ document.getElementById("shakeButton").addEventListener("click", () => {
     console.log("Controller: Shake button pressed");
     sendControlMessage("shake-action");
     document.getElementById("displayArea").innerText = "Shake action received on Controller!";
-    // Schedule clearing the control message after 180 seconds (3 minutes)
+    // Schedule clearing the control message after 180 seconds
     setTimeout(() => {
       set(ref(db, "liftandearn/control"), null)
         .then(() => {
@@ -176,7 +171,6 @@ document.getElementById("tiltButton").addEventListener("click", () => {
     console.log("Controller: Tilt button pressed");
     sendControlMessage("tilt-action");
     document.getElementById("displayArea").innerText = "Tilt action received on Controller!";
-    // Schedule clearing after 180 seconds
     setTimeout(() => {
       set(ref(db, "liftandearn/control"), null)
         .then(() => {
@@ -200,7 +194,6 @@ document.getElementById("logPointsButton").addEventListener("click", () => {
     console.log("Controller: Log Points button pressed");
     sendControlMessage("log-points");
     document.getElementById("displayArea").innerText = "Log Points action received on Controller!";
-    // Schedule clearing after 180 seconds
     setTimeout(() => {
       set(ref(db, "liftandearn/control"), null)
         .then(() => {
