@@ -2,7 +2,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-analytics.js";
 import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
-import { generateQRCode } from "./qr.js"; // now in the same js folder
+import { generateQRCode } from "./qr.js"; // qr.js is in the same js folder
 
 // -------------------------------------------------
 // 1) Firebase configuration (replace with your actual values)
@@ -88,8 +88,7 @@ if (!isController) {
         document.getElementById("displayArea").innerText = "Tilt action received on Display!";
       } else if (data.message === "log-points") {
         console.log("Display: Received 'log-points' message. Starting simulation...");
-        // Instead of resetting everything, we start the simulation that uses bar.png and maxi2.png.
-        // This assumes your simulation.js defines a global Simulation with a start() method.
+        // Start the simulation (this assumes Simulation.start() is defined in simulation.js)
         if (typeof Simulation !== "undefined" && Simulation.start) {
           Simulation.start();
         } else {
@@ -97,7 +96,7 @@ if (!isController) {
         }
       }
     }
-    // We do not clear the message here automatically.
+    // We do not automatically clear the UI on receiving null if no active control.
   });
 } else {
   // -------------------------------------------------
