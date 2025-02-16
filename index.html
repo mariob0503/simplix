@@ -30,7 +30,7 @@
       z-index: 0;
       pointer-events: none;
     }
-    /* Lift & Earn Header with pulsating glow */
+    /* Header with pulsating glow */
     #flag {
       position: absolute;
       top: 0;
@@ -56,7 +56,7 @@
     #flag .subtitle span.blue {
       color: #0091EA;
     }
-    /* Center container for messages and QR code */
+    /* Center container for QR code and messages */
     #centerDisplay {
       position: absolute;
       top: 60%;
@@ -130,13 +130,14 @@
   <!-- Background canvas for animated particles -->
   <canvas id="bgCanvas"></canvas>
 
-  <!-- Lift & Earn UI -->
+  <!-- Header / Branding -->
   <div id="flag">
     <div class="big-bold">Lift & Earn</div>
     <div class="subtitle"><span class="blue">Simplix</span> Gym Rewards</div>
   </div>
+
+  <!-- Main container for QR code and messages -->
   <div id="centerDisplay" class="initial">
-    <!-- This container will hold the QR code on the Display side -->
     <div id="qrContainer"></div>
     <p>Choose your action to log your points.</p>
   </div>
@@ -151,19 +152,18 @@
   </div>
   <div id="displayArea"></div>
 
-  <!-- Dynamic script loading based on URL parameter -->
+  <!-- Dynamically load controller.js or display.js based on URL parameter -->
   <script>
-    // Check for ?controller in the URL
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.has('controller')) {
-      // Load the Controller logic
+      // Load Controller logic
       var script = document.createElement("script");
       script.src = "QRCode/controller.js";
       script.type = "text/javascript";
       document.body.appendChild(script);
       console.log("Loading controller.js");
     } else {
-      // Load the Display logic
+      // Load Display logic
       var script = document.createElement("script");
       script.src = "QRCode/display.js";
       script.type = "text/javascript";
