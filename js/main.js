@@ -30,6 +30,8 @@ console.log("Is Controller:", isController);
 
 // Global timer interval variable
 let timerInterval;
+// Flag to indicate that a control message has been received
+let controlActive = false;
 
 // Function to start the 180-second countdown timer
 function startTimer() {
@@ -76,7 +78,8 @@ if (!isController) {
     console.log("Display received control message:", data);
     if (data) {
       if (data.message === "controller-online") {
-        // Hide the QR code and instruction, show control message, and start timer.
+        controlActive = true; // mark that control is active
+        // Hide the QR code and instruction; show control message; start timer.
         document.getElementById("qrContainer").style.display = "none";
         const instructionElem = document.getElementById("instruction");
         if (instructionElem) instructionElem.style.display = "none";
@@ -91,11 +94,16 @@ if (!isController) {
         window.location.href = "https://mariob0503.github.io/simplix/";
       }
     } else {
-      // If control message is cleared, stop the timer and regenerate the QR code, and show instruction.
-      stopTimer();
-      generateQRCode("qrContainer", window.location.href + "?controller");
-      const instructionElem = document.getElementById("instruction");
-      if (instructionElem) instructionElem.style.display = "block";
+      // Only reset if a control message had been active.
+      if (controlActive) {
+        console.log("Display: Control message cleared.");
+        controlActive = false;
+        stopTimer();
+        generateQRCode("qrContainer", window.location.href + "?controller");
+        const instructionElem = document.getElementById("instruction");
+        if (instructionElem) instructionElem.style.display = "block";
+        document.getElementById("displayArea").innerText = "";
+      }
     }
   });
 } else {
@@ -147,7 +155,7 @@ document.getElementById("shakeButton").addEventListener("click", () => {
     console.log("Controller: Shake button pressed");
     sendControlMessage("shake-action");
     document.getElementById("displayArea").innerText = "Shake action received on Controller!";
-    // Schedule clearing the control message after 180 seconds
+    // Schedule clearing the control message after 180 seconds (if a button is pressed)
     setTimeout(() => {
       set(ref(db, "liftandearn/control"), null)
         .then(() => {
