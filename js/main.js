@@ -2,7 +2,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-analytics.js";
 import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
-import { generateQRCode } from "./qr.js"; // qr.js is now in the same js folder
+import { generateQRCode } from "./qr.js"; // qr.js is in the same js folder
 
 // -------------------------------------------------
 // 1) Firebase configuration (replace with your actual values)
@@ -28,10 +28,10 @@ const urlParams = new URLSearchParams(window.location.search);
 const isController = urlParams.has("controller");
 console.log("Is Controller:", isController);
 
-// Global timer variable
+// Global timer interval variable (for the Display timer)
 let timerInterval;
 
-// Function to start a 180-second countdown timer
+// Function to start the 180-second countdown timer
 function startTimer() {
   let remainingTime = 180; // seconds
   const timerElem = document.getElementById("timer");
@@ -76,7 +76,7 @@ if (!isController) {
     console.log("Display received control message:", data);
     if (data) {
       if (data.message === "controller-online") {
-        // Hide QR code and instruction; show control message; start timer.
+        // Hide the QR code and instruction; show control message; start timer.
         document.getElementById("qrContainer").style.display = "none";
         const instructionElem = document.getElementById("instruction");
         if (instructionElem) instructionElem.style.display = "none";
@@ -91,7 +91,7 @@ if (!isController) {
         window.location.href = "https://mariob0503.github.io/simplix/";
       }
     }
-    // We ignore null updates if no control was active.
+    // We no longer auto-clear on Display because we rely on the Controller's auto-clear.
   });
 } else {
   // -------------------------------------------------
@@ -109,10 +109,10 @@ if (!isController) {
     instructionElem.style.display = "none";
   }
 
-  // After a 2-second delay, send the "controller-online" message
+  // After a 1-second delay, send the "controller-online" message
   setTimeout(() => {
     sendControlMessage("controller-online");
-  }, 2000);
+  }, 1000);
 }
 
 // -------------------------------------------------
@@ -142,7 +142,16 @@ document.getElementById("shakeButton").addEventListener("click", () => {
     console.log("Controller: Shake button pressed");
     sendControlMessage("shake-action");
     document.getElementById("displayArea").innerText = "Shake action received on Controller!";
-    // Removed the auto-clear timeout to avoid premature clearing.
+    // Auto-clear control message after 3.5 seconds
+    setTimeout(() => {
+      set(ref(db, "liftandearn/control"), null)
+        .then(() => {
+          console.log("Controller: Cleared control message after 3.5 seconds.");
+        })
+        .catch((error) => {
+          console.error("Controller: Error clearing control message:", error);
+        });
+    }, 3500);
   } else {
     document.getElementById("displayArea").innerText = "Shake action received on Display!";
   }
@@ -157,7 +166,15 @@ document.getElementById("tiltButton").addEventListener("click", () => {
     console.log("Controller: Tilt button pressed");
     sendControlMessage("tilt-action");
     document.getElementById("displayArea").innerText = "Tilt action received on Controller!";
-    // Removed auto-clear timeout.
+    setTimeout(() => {
+      set(ref(db, "liftandearn/control"), null)
+        .then(() => {
+          console.log("Controller: Cleared control message after 3.5 seconds.");
+        })
+        .catch((error) => {
+          console.error("Controller: Error clearing control message:", error);
+        });
+    }, 3500);
   } else {
     document.getElementById("displayArea").innerText = "Tilt action received on Display!";
   }
@@ -172,7 +189,15 @@ document.getElementById("logPointsButton").addEventListener("click", () => {
     console.log("Controller: Log Points button pressed");
     sendControlMessage("log-points");
     document.getElementById("displayArea").innerText = "Log Points action received on Controller!";
-    // Removed auto-clear timeout.
+    setTimeout(() => {
+      set(ref(db, "liftandearn/control"), null)
+        .then(() => {
+          console.log("Controller: Cleared control message after 3.5 seconds.");
+        })
+        .catch((error) => {
+          console.error("Controller: Error clearing control message:", error);
+        });
+    }, 3500);
   } else {
     document.getElementById("displayArea").innerText = "Log Points action received on Display!";
   }
